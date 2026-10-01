@@ -1,56 +1,82 @@
-# Welcome to your Expo app 👋
+# Expense Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile-first personal expense tracking app built with React Native and Expo.
+Recording an expense should take seconds; monthly analysis should require zero
+manual calculation. See [plan.md](./plan.md) for the full product and
+architecture plan.
+
+## Status
+
+Currently at **Milestone 0 — Project Setup**: navigation, tooling, and folder
+structure only. No database, expense entry, or analytics yet.
+
+## Stack
+
+- Expo SDK 57 (React Native 0.86, React 19)
+- TypeScript (strict mode)
+- Expo Router (file-based routing, `src/app/`)
+- ESLint (`eslint-config-expo`) + Prettier
+- Jest (`jest-expo` preset)
 
 ## Get started
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Then open the app in a [development build](https://docs.expo.dev/develop/development-builds/introduction/),
+an Android emulator, an iOS simulator, or [Expo Go](https://expo.dev/go).
 
-### Other setup steps
+## Scripts
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npx expo start        # start the dev server
+npm run android        # start and open on Android
+npm run ios            # start and open on iOS
+npm run web            # start and open on web
+npm run lint            # ESLint + Prettier checks
+npm test                # run the Jest test suite
+npm run test:watch      # Jest in watch mode
+npx tsc --noEmit        # typecheck
+```
 
-## Learn more
+## Project structure
 
-To learn more about developing your project with Expo, look at the following resources:
+```text
+src/
+├── app/            # Expo Router screens (file-based routing) and root layout
+│                   # (drawer navigation is configured in app/_layout.tsx)
+├── components/
+│   ├── ui/         # Low-level, reusable UI primitives (ThemedText, ThemedView, ...)
+│   └── ...         # Shared app-level components
+├── constants/      # Theme tokens (colors, spacing, fonts)
+└── hooks/          # Shared hooks (color scheme, theming)
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+As features are implemented (per [plan.md](./plan.md)), this will grow to
+include:
 
-## Join the community
+- `src/features/<feature>/` — screens, components, hooks, services, types per
+  feature (expenses, categories, analytics, bulk-entry, settings)
+- `src/database/` — schema, migrations, and repositories for local SQLite
+  storage
+- `src/utils/` — cross-cutting utilities (starting with the money/paise
+  handling utility)
+- `src/types/` — shared domain types
 
-Join our community of developers creating universal apps.
+Expo Router's file-based routing (`src/app/`) replaces the generic
+`app/navigation` folder from the original plan; `_layout.tsx` files serve as
+the provider composition root instead of a separate `app/providers` folder.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Business logic and data access are kept out of screens — screens call into
+feature services/repositories, not SQL or parsing logic directly.
+
+## Notes
+
+- `ios/` and `android/` directories are not checked in — they're generated via
+  Continuous Native Generation (CNG) from `app.json`. Configure native
+  behavior there, not by hand-editing generated native projects.
+- After adding a library with native code, you'll need a development build
+  (`npx expo run:ios` / `npx expo run:android`) since Expo Go only includes
+  its bundled native modules.

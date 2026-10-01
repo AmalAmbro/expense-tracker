@@ -1,18 +1,72 @@
+import { SymbolView } from 'expo-symbols';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Drawer } from 'expo-router/drawer';
+import { ColorValue, useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+type DrawerIconProps = { color: ColorValue; size: number };
 
-SplashScreen.preventAutoHideAsync();
+function HomeIcon({ color, size }: DrawerIconProps) {
+  return (
+    <SymbolView
+      name={{ ios: 'house', android: 'home', web: 'home' }}
+      tintColor={color}
+      size={size}
+    />
+  );
+}
 
-export default function TabLayout() {
+function HistoryIcon({ color, size }: DrawerIconProps) {
+  return (
+    <SymbolView
+      name={{ ios: 'list.bullet', android: 'format_list_bulleted', web: 'list' }}
+      tintColor={color}
+      size={size}
+    />
+  );
+}
+
+function AnalyticsIcon({ color, size }: DrawerIconProps) {
+  return (
+    <SymbolView
+      name={{ ios: 'chart.pie', android: 'pie_chart', web: 'pie_chart' }}
+      tintColor={color}
+      size={size}
+    />
+  );
+}
+
+function SettingsIcon({ color, size }: DrawerIconProps) {
+  return (
+    <SymbolView
+      name={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
+      tintColor={color}
+      size={size}
+    />
+  );
+}
+
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+      <Drawer>
+        <Drawer.Screen
+          name="index"
+          options={{ title: 'Home', drawerLabel: 'Home', drawerIcon: HomeIcon }}
+        />
+        <Drawer.Screen
+          name="history"
+          options={{ title: 'History', drawerLabel: 'History', drawerIcon: HistoryIcon }}
+        />
+        <Drawer.Screen
+          name="analytics"
+          options={{ title: 'Analytics', drawerLabel: 'Analytics', drawerIcon: AnalyticsIcon }}
+        />
+        <Drawer.Screen
+          name="settings"
+          options={{ title: 'Settings', drawerLabel: 'Settings', drawerIcon: SettingsIcon }}
+        />
+      </Drawer>
     </ThemeProvider>
   );
 }
