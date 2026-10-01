@@ -3,6 +3,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { ColorValue, useColorScheme } from 'react-native';
 
+import { DatabaseProvider } from '@/database/provider';
+
 type DrawerIconProps = { color: ColorValue; size: number };
 
 function HomeIcon({ color, size }: DrawerIconProps) {
@@ -48,25 +50,27 @@ function SettingsIcon({ color, size }: DrawerIconProps) {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Drawer>
-        <Drawer.Screen
-          name="index"
-          options={{ title: 'Home', drawerLabel: 'Home', drawerIcon: HomeIcon }}
-        />
-        <Drawer.Screen
-          name="history"
-          options={{ title: 'History', drawerLabel: 'History', drawerIcon: HistoryIcon }}
-        />
-        <Drawer.Screen
-          name="analytics"
-          options={{ title: 'Analytics', drawerLabel: 'Analytics', drawerIcon: AnalyticsIcon }}
-        />
-        <Drawer.Screen
-          name="settings"
-          options={{ title: 'Settings', drawerLabel: 'Settings', drawerIcon: SettingsIcon }}
-        />
-      </Drawer>
-    </ThemeProvider>
+    <DatabaseProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Drawer>
+          <Drawer.Screen
+            name="index"
+            options={{ title: 'Home', drawerLabel: 'Home', drawerIcon: HomeIcon }}
+          />
+          <Drawer.Screen
+            name="history"
+            options={{ title: 'History', drawerLabel: 'History', drawerIcon: HistoryIcon }}
+          />
+          <Drawer.Screen
+            name="analytics"
+            options={{ title: 'Analytics', drawerLabel: 'Analytics', drawerIcon: AnalyticsIcon }}
+          />
+          <Drawer.Screen
+            name="settings"
+            options={{ title: 'Settings', drawerLabel: 'Settings', drawerIcon: SettingsIcon }}
+          />
+        </Drawer>
+      </ThemeProvider>
+    </DatabaseProvider>
   );
 }
