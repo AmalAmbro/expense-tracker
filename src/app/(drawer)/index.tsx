@@ -120,6 +120,7 @@ export default function HomeScreen() {
           accessibilityLabel="Add expense"
           style={({ pressed }) => [
             styles.addButton,
+            styles.primaryButton,
             { backgroundColor: theme.text },
             pressed && styles.pressed,
           ]}
@@ -127,6 +128,19 @@ export default function HomeScreen() {
           <ThemedText style={[styles.addButtonText, { color: theme.background }]}>
             + Add Expense
           </ThemedText>
+        </Pressable>
+        <Pressable
+          onPress={() => router.navigate('/bulk-entry')}
+          accessibilityRole="button"
+          accessibilityLabel="Bulk entry"
+          style={({ pressed }) => [
+            styles.addButton,
+            styles.secondaryButton,
+            { backgroundColor: theme.backgroundElement },
+            pressed && styles.pressed,
+          ]}
+        >
+          <ThemedText style={styles.addButtonText}>Bulk</ThemedText>
         </Pressable>
       </View>
     </ThemedView>
@@ -167,8 +181,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   addBar: {
+    flexDirection: 'row',
+    gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
+  },
+  primaryButton: {
+    flex: 1,
+  },
+  secondaryButton: {
+    paddingHorizontal: Spacing.four,
   },
   addButton: {
     minHeight: 52,

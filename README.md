@@ -11,8 +11,10 @@ Milestones 0–5 are done: project setup, local SQLite database, expense entry,
 transaction history (grouped by date, with search, filters, edit, and delete),
 the Home dashboard (monthly and today's totals, category totals, recent
 transactions, month navigation), and analytics (category breakdown, essential
-vs discretionary, daily spending, month-over-month comparison). Bulk entry and
-export are still to come.
+vs discretionary, daily spending, month-over-month comparison), and bulk entry
+(notes-style text such as `Chicken 200+90+90`, parsed deterministically,
+auto-categorised from an alias list, previewed, and saved atomically). Export is
+still to come.
 
 ## Stack
 

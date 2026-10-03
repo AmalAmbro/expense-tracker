@@ -24,6 +24,16 @@ function HistoryIcon({ color, size }: DrawerIconProps) {
   );
 }
 
+function BulkEntryIcon({ color, size }: DrawerIconProps) {
+  return (
+    <SymbolView
+      name={{ ios: 'text.badge.plus', android: 'playlist_add', web: 'playlist_add' }}
+      tintColor={color}
+      size={size}
+    />
+  );
+}
+
 function AnalyticsIcon({ color, size }: DrawerIconProps) {
   return (
     <SymbolView
@@ -54,6 +64,10 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="history"
         options={{ title: 'History', drawerLabel: 'History', drawerIcon: HistoryIcon }}
+      />
+      <Drawer.Screen
+        name="bulk-entry"
+        options={{ title: 'Bulk Entry', drawerLabel: 'Bulk Entry', drawerIcon: BulkEntryIcon }}
       />
       <Drawer.Screen
         name="analytics"

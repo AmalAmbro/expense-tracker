@@ -38,35 +38,58 @@ function assertValid(expense: NewExpense | ExpenseUpdate): void {
   }
 }
 
+async function insertExpense(
+  db: SQLiteDatabase,
+  expense: NewExpense,
+  timestamp: string,
+): Promise<string> {
+  const id = Crypto.randomUUID();
+  await db.runAsync(
+    `INSERT INTO expenses
+       (id, amount, date, category_id, subcategory_id, description, payment_method_id, is_essential, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    id,
+    expense.amount,
+    expense.date,
+    expense.categoryId,
+    expense.subcategoryId,
+    expense.description,
+    expense.paymentMethodId,
+    expense.isEssential ? 1 : 0,
+    expense.notes,
+    timestamp,
+    timestamp,
+  );
+  return id;
+}
+
 export function createExpenseRepository(db: SQLiteDatabase) {
   return {
     async create(expense: NewExpense): Promise<Expense> {
       assertValid(expense);
-      const now = new Date().toISOString();
-      const id = Crypto.randomUUID();
-
-      await db.runAsync(
-        `INSERT INTO expenses
-           (id, amount, date, category_id, subcategory_id, description, payment_method_id, is_essential, notes, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        id,
-        expense.amount,
-        expense.date,
-        expense.categoryId,
-        expense.subcategoryId,
-        expense.description,
-        expense.paymentMethodId,
-        expense.isEssential ? 1 : 0,
-        expense.notes,
-        now,
-        now,
-      );
+      const id = await insertExpense(db, expense, new Date().toISOString());
 
       const created = await this.getById(id);
       if (!created) {
         throw new Error('Failed to read back the created expense');
       }
       return created;
+    },
+
+    /**
+     * Saves several expenses atomically: either all are saved or none are.
+     * Returns how many were saved.
+     */
+    async createMany(expenses: NewExpense[]): Promise<number> {
+      expenses.forEach(assertValid);
+      const start = Date.now();
+      await db.withTransactionAsync(async () => {
+        for (const [index, expense] of expenses.entries()) {
+          // Distinct, increasing timestamps keep the batch in a stable order.
+          await insertExpense(db, expense, new Date(start + index).toISOString());
+        }
+      });
+      return expenses.length;
     },
 
     async getById(id: string): Promise<Expense | null> {
