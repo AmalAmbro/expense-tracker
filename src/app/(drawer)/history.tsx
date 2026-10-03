@@ -1,14 +1,16 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, SectionList, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ui/themed-text';
+import { ThemedTextInput } from '@/components/ui/themed-text-input';
 import { ThemedView } from '@/components/ui/themed-view';
 import { Spacing } from '@/constants/theme';
 import { ExpenseListItem } from '@/features/expenses/components/expense-list-item';
 import { FilterChip, type FilterOption } from '@/features/expenses/components/filter-chip';
 import { useExpenseList } from '@/features/expenses/hooks/use-expense-list';
 import { useExpenseOptions } from '@/features/expenses/hooks/use-expense-options';
+import { formatCategoryLabel } from '@/features/expenses/utils/category-label';
 import { groupExpensesByDate } from '@/features/expenses/utils/group-expenses-by-date';
 import {
   DATE_PRESET_OPTIONS,
@@ -19,7 +21,6 @@ import {
   type HistoryFilters,
 } from '@/features/expenses/utils/history-filters';
 import { useTheme } from '@/hooks/use-theme';
-import type { Expense } from '@/types/expense';
 import { formatDayHeading, todayISODate } from '@/utils/date';
 import { addPaise, formatPaise } from '@/utils/money';
 
@@ -64,29 +65,20 @@ export default function HistoryScreen() {
     setFilters((current) => ({ ...current, ...changes }));
   }
 
-  function categoryLabel(expense: Expense): string {
-    const category = categoryNameById.get(expense.categoryId) ?? 'Unknown category';
-    const subcategory = expense.subcategoryId
-      ? categoryNameById.get(expense.subcategoryId)
-      : undefined;
-    return subcategory ? `${category} → ${subcategory}` : category;
-  }
-
   const error = listError ?? optionsError;
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.controls}>
-        <TextInput
+        <ThemedTextInput
           value={filters.search}
           onChangeText={(search) => updateFilters({ search })}
           placeholder="Search description, notes, category"
-          placeholderTextColor={theme.textSecondary}
           accessibilityLabel="Search expenses"
           autoCorrect={false}
           clearButtonMode="while-editing"
           returnKeyType="search"
-          style={[styles.search, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+          style={[styles.search, { backgroundColor: theme.backgroundElement }]}
         />
         <ScrollView
           horizontal
@@ -161,7 +153,7 @@ export default function HistoryScreen() {
         renderItem={({ item }) => (
           <ExpenseListItem
             expense={item}
-            categoryLabel={categoryLabel(item)}
+            categoryLabel={formatCategoryLabel(item, categoryNameById)}
             paymentMethodName={paymentMethodNameById.get(item.paymentMethodId) ?? 'Unknown'}
             onPress={(expense) =>
               router.push({ pathname: '/expense/[id]', params: { id: expense.id } })

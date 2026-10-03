@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, type ReactNode } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { Button, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Button, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/ui/themed-text';
+import { ThemedTextInput } from '@/components/ui/themed-text-input';
 import { Spacing } from '@/constants/theme';
 import { CategoryField } from '@/features/expenses/components/category-field';
 import { DateField } from '@/features/expenses/components/date-field';
@@ -77,7 +78,7 @@ export function ExpenseForm({
         control={control}
         name="amountText"
         render={({ field: { value, onChange, onBlur } }) => (
-          <TextInput
+          <ThemedTextInput
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -96,7 +97,7 @@ export function ExpenseForm({
         control={control}
         name="description"
         render={({ field: { value, onChange, onBlur } }) => (
-          <TextInput
+          <ThemedTextInput
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -160,7 +161,7 @@ export function ExpenseForm({
         control={control}
         name="notes"
         render={({ field: { value, onChange, onBlur } }) => (
-          <TextInput
+          <ThemedTextInput
             value={value ?? ''}
             onChangeText={onChange}
             onBlur={onBlur}
