@@ -41,3 +41,10 @@ export function isPositiveAmount(paise: number): boolean {
 export function formatPaise(paise: number): string {
   return currencyFormatter.format(paise / 100);
 }
+
+/** Formats integer paise as editable input text, e.g. 3250 -> "32.50", 20000 -> "200". */
+export function formatPaiseForInput(paise: number): string {
+  const rupees = Math.floor(paise / 100);
+  const remainder = paise % 100;
+  return remainder === 0 ? String(rupees) : `${rupees}.${String(remainder).padStart(2, '0')}`;
+}

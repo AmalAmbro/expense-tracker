@@ -1,4 +1,11 @@
-import { formatDisplayDate, fromISODate, getMonthDateRange, toISODate } from '@/utils/date';
+import {
+  addDaysISODate,
+  formatDayHeading,
+  formatDisplayDate,
+  fromISODate,
+  getMonthDateRange,
+  toISODate,
+} from '@/utils/date';
 
 describe('getMonthDateRange', () => {
   it('returns the first and last day of a 30-day month', () => {
@@ -40,5 +47,24 @@ describe('toISODate / fromISODate', () => {
 describe('formatDisplayDate', () => {
   it('formats an ISO date for display', () => {
     expect(formatDisplayDate('2026-10-01')).toBe('1 Oct 2026');
+  });
+});
+
+describe('addDaysISODate', () => {
+  it('moves across month and year boundaries', () => {
+    expect(addDaysISODate('2026-10-01', -1)).toBe('2026-09-30');
+    expect(addDaysISODate('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDaysISODate('2024-02-28', 1)).toBe('2024-02-29');
+  });
+});
+
+describe('formatDayHeading', () => {
+  it('labels today and yesterday relative to the given day', () => {
+    expect(formatDayHeading('2026-10-03', '2026-10-03')).toBe('Today');
+    expect(formatDayHeading('2026-10-02', '2026-10-03')).toBe('Yesterday');
+  });
+
+  it('formats older dates with the weekday', () => {
+    expect(formatDayHeading('2026-10-01', '2026-10-03')).toBe('Thu, 1 Oct 2026');
   });
 });

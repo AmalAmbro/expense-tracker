@@ -2,10 +2,11 @@ import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { calculateCategoryTotals, calculateMonthlyTotal } from '@/database/aggregations';
+import { buildExpenseListQuery } from '@/database/queries/expense-list-query';
 import type { ExpenseRow } from '@/database/schema/tables';
 import { getMonthDateRange } from '@/utils/date';
 import { isPositiveAmount } from '@/utils/money';
-import type { Expense, ExpenseUpdate, NewExpense } from '@/types/expense';
+import type { Expense, ExpenseFilter, ExpenseUpdate, NewExpense } from '@/types/expense';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -105,19 +106,9 @@ export function createExpenseRepository(db: SQLiteDatabase) {
       await db.runAsync('DELETE FROM expenses WHERE id = ?', id);
     },
 
-    async list(filter?: { startDate?: string; endDate?: string }): Promise<Expense[]> {
-      if (filter?.startDate && filter?.endDate) {
-        const rows = await db.getAllAsync<ExpenseRow>(
-          'SELECT * FROM expenses WHERE date BETWEEN ? AND ? ORDER BY date DESC, created_at DESC',
-          filter.startDate,
-          filter.endDate,
-        );
-        return rows.map(toExpense);
-      }
-
-      const rows = await db.getAllAsync<ExpenseRow>(
-        'SELECT * FROM expenses ORDER BY date DESC, created_at DESC',
-      );
+    async list(filter?: ExpenseFilter): Promise<Expense[]> {
+      const { sql, params } = buildExpenseListQuery(filter);
+      const rows = await db.getAllAsync<ExpenseRow>(sql, params);
       return rows.map(toExpense);
     },
 

@@ -20,3 +20,17 @@ export type Expense = {
 export type NewExpense = Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>;
 
 export type ExpenseUpdate = Partial<NewExpense>;
+
+/** Criteria for listing expenses. Every field is optional; omitted fields don't filter. */
+export type ExpenseFilter = {
+  /** Case-insensitive substring match on description, notes, and category/subcategory names. */
+  search?: string;
+  /** Inclusive ISO date lower bound. */
+  startDate?: string;
+  /** Inclusive ISO date upper bound. */
+  endDate?: string;
+  /** Matches either the expense's category or its subcategory. */
+  categoryId?: string;
+  paymentMethodId?: string;
+  isEssential?: boolean;
+};

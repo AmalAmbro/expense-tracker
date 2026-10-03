@@ -1,6 +1,7 @@
 import {
   addPaise,
   formatPaise,
+  formatPaiseForInput,
   isPositiveAmount,
   parseAmountToPaise,
   subtractPaise,
@@ -79,5 +80,23 @@ describe('formatPaise', () => {
 
   it('groups thousands using Indian digit grouping', () => {
     expect(formatPaise(842000)).toBe('₹8,420.00');
+  });
+});
+
+describe('formatPaiseForInput', () => {
+  it('drops the decimal part for whole rupees', () => {
+    expect(formatPaiseForInput(20000)).toBe('200');
+  });
+
+  it('keeps two decimal places otherwise', () => {
+    expect(formatPaiseForInput(3250)).toBe('32.50');
+    expect(formatPaiseForInput(1625)).toBe('16.25');
+    expect(formatPaiseForInput(5)).toBe('0.05');
+  });
+
+  it('round-trips through parseAmountToPaise', () => {
+    for (const paise of [1, 99, 100, 3250, 89600, 121200]) {
+      expect(parseAmountToPaise(formatPaiseForInput(paise))).toBe(paise);
+    }
   });
 });

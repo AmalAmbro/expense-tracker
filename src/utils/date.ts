@@ -48,3 +48,19 @@ export function getMonthDateRange(month: string): { start: string; end: string }
     end: `${yearText}-${monthText}-${String(lastDay).padStart(2, '0')}`,
   };
 }
+
+const weekdayFormatter = new Intl.DateTimeFormat('en-IN', { weekday: 'short' });
+
+/** Returns the ISO date `days` days after (or before, if negative) the given ISO date. */
+export function addDaysISODate(isoDate: string, days: number): string {
+  const date = fromISODate(isoDate);
+  date.setDate(date.getDate() + days);
+  return toISODate(date);
+}
+
+/** Formats an ISO date as a list heading: "Today", "Yesterday", or e.g. "Thu, 1 Oct 2026". */
+export function formatDayHeading(isoDate: string, today: string = todayISODate()): string {
+  if (isoDate === today) return 'Today';
+  if (isoDate === addDaysISODate(today, -1)) return 'Yesterday';
+  return `${weekdayFormatter.format(fromISODate(isoDate))}, ${formatDisplayDate(isoDate)}`;
+}
