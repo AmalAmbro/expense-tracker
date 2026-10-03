@@ -1,5 +1,7 @@
 import {
   addDaysISODate,
+  formatMonthLabel,
+  shiftMonth,
   formatDayHeading,
   formatDisplayDate,
   fromISODate,
@@ -66,5 +68,29 @@ describe('formatDayHeading', () => {
 
   it('formats older dates with the weekday', () => {
     expect(formatDayHeading('2026-10-01', '2026-10-03')).toBe('Thu, 1 Oct 2026');
+  });
+});
+
+describe('shiftMonth', () => {
+  it('moves forward and backward within a year', () => {
+    expect(shiftMonth('2026-10', -1)).toBe('2026-09');
+    expect(shiftMonth('2026-09', 1)).toBe('2026-10');
+  });
+
+  it('crosses year boundaries', () => {
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01');
+    expect(shiftMonth('2026-10', -12)).toBe('2025-10');
+  });
+
+  it('rejects malformed months', () => {
+    expect(() => shiftMonth('2026-13', 1)).toThrow();
+  });
+});
+
+describe('formatMonthLabel', () => {
+  it('formats a month with its full name and year', () => {
+    expect(formatMonthLabel('2026-10')).toBe('October 2026');
+    expect(formatMonthLabel('2026-09')).toBe('September 2026');
   });
 });

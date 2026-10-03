@@ -1,4 +1,4 @@
-import { addDaysISODate, getMonthDateRange } from '@/utils/date';
+import { addDaysISODate, getMonthDateRange, shiftMonth } from '@/utils/date';
 import type { ExpenseFilter } from '@/types/expense';
 
 export type DatePreset = 'all' | 'this-month' | 'last-month' | 'last-30-days' | 'this-year';
@@ -41,7 +41,6 @@ export function resolveDatePreset(
   today: string,
 ): { startDate?: string; endDate?: string } {
   const year = Number(today.slice(0, 4));
-  const month = Number(today.slice(5, 7));
 
   switch (preset) {
     case 'all':
@@ -51,9 +50,7 @@ export function resolveDatePreset(
       return { startDate: start, endDate: end };
     }
     case 'last-month': {
-      const lastMonth =
-        month === 1 ? `${year - 1}-12` : `${year}-${String(month - 1).padStart(2, '0')}`;
-      const { start, end } = getMonthDateRange(lastMonth);
+      const { start, end } = getMonthDateRange(shiftMonth(today.slice(0, 7), -1));
       return { startDate: start, endDate: end };
     }
     case 'last-30-days':

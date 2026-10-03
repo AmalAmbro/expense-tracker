@@ -64,3 +64,24 @@ export function formatDayHeading(isoDate: string, today: string = todayISODate()
   if (isoDate === addDaysISODate(today, -1)) return 'Yesterday';
   return `${weekdayFormatter.format(fromISODate(isoDate))}, ${formatDisplayDate(isoDate)}`;
 }
+
+const monthNameFormatter = new Intl.DateTimeFormat('en-IN', { month: 'long' });
+
+/** Returns the current month as "YYYY-MM", in local time. */
+export function currentMonth(): string {
+  return todayISODate().slice(0, 7);
+}
+
+/** Returns the "YYYY-MM" month `delta` months after (or before, if negative) `month`. */
+export function shiftMonth(month: string, delta: number): string {
+  const { start } = getMonthDateRange(month); // validates the input
+  const date = fromISODate(start);
+  date.setMonth(date.getMonth() + delta);
+  return toISODate(date).slice(0, 7);
+}
+
+/** Formats a "YYYY-MM" month for display, e.g. "October 2026". */
+export function formatMonthLabel(month: string): string {
+  const { start } = getMonthDateRange(month);
+  return `${monthNameFormatter.format(fromISODate(start))} ${start.slice(0, 4)}`;
+}
