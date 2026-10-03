@@ -14,6 +14,10 @@ export default function RootLayout() {
             name="add-expense"
             options={{ presentation: 'modal', title: 'Add Expense' }}
           />
+          <Stack.Screen
+            name="expense/[id]"
+            options={{ presentation: 'modal', title: 'Edit Expense' }}
+          />
         </Stack>
       </ThemeProvider>
     </DatabaseProvider>

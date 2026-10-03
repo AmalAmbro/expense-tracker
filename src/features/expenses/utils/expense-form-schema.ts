@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { parseAmountToPaise } from '@/utils/money';
+import { formatPaiseForInput, parseAmountToPaise } from '@/utils/money';
+import type { Expense, NewExpense } from '@/types/expense';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -26,3 +27,31 @@ export const expenseFormSchema = z.object({
 });
 
 export type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
+
+/** Converts validated form values into a domain expense (amount in paise). */
+export function formValuesToExpense(values: ExpenseFormValues): NewExpense {
+  return {
+    amount: parseAmountToPaise(values.amountText),
+    date: values.date,
+    categoryId: values.categoryId,
+    subcategoryId: values.subcategoryId,
+    description: values.description.trim(),
+    paymentMethodId: values.paymentMethodId,
+    isEssential: values.isEssential,
+    notes: values.notes?.trim() || null,
+  };
+}
+
+/** Converts a saved expense into form values for editing. */
+export function expenseToFormValues(expense: Expense): ExpenseFormValues {
+  return {
+    amountText: formatPaiseForInput(expense.amount),
+    description: expense.description,
+    categoryId: expense.categoryId,
+    subcategoryId: expense.subcategoryId,
+    date: expense.date,
+    paymentMethodId: expense.paymentMethodId,
+    isEssential: expense.isEssential,
+    notes: expense.notes,
+  };
+}
