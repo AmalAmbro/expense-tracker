@@ -1,6 +1,7 @@
 import {
   addDaysISODate,
   formatMonthLabel,
+  formatShortMonth,
   shiftMonth,
   formatDayHeading,
   formatDisplayDate,
@@ -92,5 +93,12 @@ describe('formatMonthLabel', () => {
   it('formats a month with its full name and year', () => {
     expect(formatMonthLabel('2026-10')).toBe('October 2026');
     expect(formatMonthLabel('2026-09')).toBe('September 2026');
+  });
+});
+
+describe('formatShortMonth', () => {
+  it('formats the short month name', () => {
+    expect(formatShortMonth('2026-09')).toBe('Sep');
+    expect(formatShortMonth('2026-10')).toBe('Oct');
   });
 });

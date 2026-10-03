@@ -7,11 +7,12 @@ architecture plan.
 
 ## Status
 
-Milestones 0–4 are done: project setup, local SQLite database, expense entry,
+Milestones 0–5 are done: project setup, local SQLite database, expense entry,
 transaction history (grouped by date, with search, filters, edit, and delete),
-and the Home dashboard (monthly and today's totals, category totals, recent
-transactions, month navigation). Analytics, bulk entry, and export are still
-to come.
+the Home dashboard (monthly and today's totals, category totals, recent
+transactions, month navigation), and analytics (category breakdown, essential
+vs discretionary, daily spending, month-over-month comparison). Bulk entry and
+export are still to come.
 
 ## Stack
 

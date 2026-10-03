@@ -85,3 +85,25 @@ export function formatMonthLabel(month: string): string {
   const { start } = getMonthDateRange(month);
   return `${monthNameFormatter.format(fromISODate(start))} ${start.slice(0, 4)}`;
 }
+
+// Fixed rather than Intl-derived: short month names vary by locale data ("Sep" vs "Sept").
+const SHORT_MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/** Formats a "YYYY-MM" month as its short name, e.g. "Sep". */
+export function formatShortMonth(month: string): string {
+  const { start } = getMonthDateRange(month); // validates the input
+  return SHORT_MONTH_NAMES[Number(start.slice(5, 7)) - 1];
+}

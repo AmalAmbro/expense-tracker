@@ -48,3 +48,11 @@ export function formatPaiseForInput(paise: number): string {
   const remainder = paise % 100;
   return remainder === 0 ? String(rupees) : `${rupees}.${String(remainder).padStart(2, '0')}`;
 }
+
+/** Divides paise by a positive integer, rounding to the nearest paisa (e.g. for averages). */
+export function dividePaise(paise: number, divisor: number): number {
+  if (!Number.isInteger(divisor) || divisor <= 0) {
+    throw new Error(`Divisor must be a positive integer: ${divisor}`);
+  }
+  return Math.round(paise / divisor);
+}

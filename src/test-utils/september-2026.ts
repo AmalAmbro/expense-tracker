@@ -34,6 +34,9 @@ export const SEPTEMBER_2026_LINES: { description: string; amounts: string; categ
     { description: 'Donation', amounts: '50', categoryId: 'giving' },
   ];
 
+/** Top-level categories whose seeded `isEssentialDefault` is true. */
+const ESSENTIAL_CATEGORY_IDS = new Set(['food', 'transport', 'health']);
+
 /** Expands the September 2026 lines into one expense per amount, dated across the month. */
 export function buildSeptember2026Expenses(): Expense[] {
   const expenses: Expense[] = [];
@@ -49,7 +52,7 @@ export function buildSeptember2026Expenses(): Expense[] {
         subcategoryId: null,
         description: line.description,
         paymentMethodId: 'upi',
-        isEssential: true,
+        isEssential: ESSENTIAL_CATEGORY_IDS.has(line.categoryId),
         notes: null,
         createdAt: timestamp,
         updatedAt: timestamp,

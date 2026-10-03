@@ -1,5 +1,6 @@
 import {
   addPaise,
+  dividePaise,
   formatPaise,
   formatPaiseForInput,
   isPositiveAmount,
@@ -98,5 +99,18 @@ describe('formatPaiseForInput', () => {
     for (const paise of [1, 99, 100, 3250, 89600, 121200]) {
       expect(parseAmountToPaise(formatPaiseForInput(paise))).toBe(paise);
     }
+  });
+});
+
+describe('dividePaise', () => {
+  it('divides and rounds to whole paise', () => {
+    expect(dividePaise(1275950, 30)).toBe(42532);
+    expect(dividePaise(10000, 4)).toBe(2500);
+  });
+
+  it('rejects zero, negative, and fractional divisors', () => {
+    expect(() => dividePaise(100, 0)).toThrow();
+    expect(() => dividePaise(100, -2)).toThrow();
+    expect(() => dividePaise(100, 1.5)).toThrow();
   });
 });
