@@ -20,6 +20,14 @@ export function createPaymentMethodRepository(db: SQLiteDatabase) {
       );
       return rows.map(toPaymentMethod);
     },
+
+    /** Every payment method, including inactive ones (e.g. for backups). */
+    async listAll(): Promise<PaymentMethod[]> {
+      const rows = await db.getAllAsync<PaymentMethodRow>(
+        'SELECT * FROM payment_methods ORDER BY sort_order ASC',
+      );
+      return rows.map(toPaymentMethod);
+    },
   };
 }
 

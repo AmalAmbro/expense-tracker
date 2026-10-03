@@ -5,7 +5,7 @@ import { CREATE_TABLES_SQL } from '@/database/schema/tables';
 
 import { SEED_CATEGORIES, SEED_PAYMENT_METHODS } from './seed-data';
 
-const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 1;
 
 /** Runs on every app start; applies only the migrations newer than the stored version. */
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {

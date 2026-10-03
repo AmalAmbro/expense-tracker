@@ -13,7 +13,8 @@ the Home dashboard (monthly and today's totals, category totals, recent
 transactions, month navigation), and analytics (category breakdown, essential
 vs discretionary, daily spending, month-over-month comparison), and bulk entry
 (notes-style text such as `Chicken 200+90+90`, parsed deterministically,
-auto-categorised from an alias list, previewed, and saved atomically). Export is
+auto-categorised from an alias list, previewed, and saved atomically). Settings
+can back up all data to a JSON file via the system share sheet. CSV export is
 still to come.
 
 ## Stack

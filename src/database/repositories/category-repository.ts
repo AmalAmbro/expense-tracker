@@ -25,6 +25,14 @@ export function createCategoryRepository(db: SQLiteDatabase) {
       return rows.map(toCategory);
     },
 
+    /** Every category, including inactive ones (e.g. for backups). */
+    async listAll(): Promise<Category[]> {
+      const rows = await db.getAllAsync<CategoryRow>(
+        'SELECT * FROM categories ORDER BY sort_order ASC',
+      );
+      return rows.map(toCategory);
+    },
+
     async getById(id: string): Promise<Category | null> {
       const row = await db.getFirstAsync<CategoryRow>('SELECT * FROM categories WHERE id = ?', id);
       return row ? toCategory(row) : null;
