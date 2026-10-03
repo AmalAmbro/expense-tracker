@@ -4,6 +4,7 @@ import type { Expense } from '@/types/expense';
 function makeExpense(overrides: Partial<Expense>): Expense {
   return {
     id: 'id',
+    paymentId: 'payment-1',
     amount: 100,
     date: '2026-09-01',
     categoryId: 'cat-1',

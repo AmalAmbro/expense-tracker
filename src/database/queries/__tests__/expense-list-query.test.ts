@@ -8,13 +8,18 @@ describe('buildExpenseListQuery', () => {
     expect(params).toEqual([]);
   });
 
-  it('searches description, notes, and category names with a literal pattern', () => {
+  it('reads expense items joined with their payments', () => {
+    expect(buildExpenseListQuery().sql).toMatch(
+      /^SELECT e\.\*, p\.payment_method_id FROM expense_items e JOIN payments p ON p\.id = e\.payment_id/,
+    );
+  });
+
+  it('searches description, notes, merchant, and category names with a literal pattern', () => {
     const { sql, params } = buildExpenseListQuery({ search: '  tea  ' });
-    expect(sql).toContain('e.description LIKE ?');
-    expect(sql).toContain('e.notes LIKE ?');
-    expect(sql).toContain('c.name LIKE ?');
-    expect(sql).toContain('sc.name LIKE ?');
-    expect(params).toEqual(['%tea%', '%tea%', '%tea%', '%tea%']);
+    for (const column of ['e.description', 'e.notes', 'p.merchant_name', 'c.name', 'sc.name']) {
+      expect(sql).toContain(`${column} LIKE ?`);
+    }
+    expect(params).toEqual(Array(5).fill('%tea%'));
   });
 
   it('escapes LIKE wildcards in search text', () => {
@@ -43,7 +48,7 @@ describe('buildExpenseListQuery', () => {
     });
     expect(sql).toContain(
       'WHERE e.date >= ? AND e.date <= ? AND (e.category_id = ? OR e.subcategory_id = ?)' +
-        ' AND e.payment_method_id = ? AND e.is_essential = ?',
+        ' AND p.payment_method_id = ? AND e.is_essential = ?',
     );
     expect(params).toEqual(['2026-09-01', '2026-09-30', 'food', 'food', 'upi', 0]);
   });

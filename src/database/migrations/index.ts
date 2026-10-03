@@ -1,32 +1,79 @@
 import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { CREATE_TABLES_SQL } from '@/database/schema/tables';
+import {
+  SCHEMA_V1_SQL,
+  SCHEMA_V2_COPY_SQL,
+  SCHEMA_V2_CREATE_SQL,
+  SCHEMA_V2_FINALIZE_SQL,
+} from '@/database/schema/tables';
 
 import { SEED_CATEGORIES, SEED_PAYMENT_METHODS } from './seed-data';
 
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 
 /** Runs on every app start; applies only the migrations newer than the stored version. */
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   // SQLite enforces foreign keys per-connection, not persistently, so this runs every launch.
   await db.execAsync('PRAGMA foreign_keys = ON;');
 
-  const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-  let currentVersion = row?.user_version ?? 0;
-
+  let currentVersion = await getUserVersion(db);
   if (currentVersion >= DATABASE_VERSION) {
     return;
   }
 
   if (currentVersion === 0) {
-    await db.execAsync(CREATE_TABLES_SQL);
+    await db.execAsync(SCHEMA_V1_SQL);
     await seedCategories(db);
     await seedPaymentMethods(db);
+    await db.execAsync('PRAGMA user_version = 1');
     currentVersion = 1;
   }
 
-  await db.execAsync(`PRAGMA user_version = ${currentVersion}`);
+  if (currentVersion === 1) {
+    await migrateV1ToV2(db);
+    currentVersion = 2;
+  }
+}
+
+async function getUserVersion(db: SQLiteDatabase): Promise<number> {
+  const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+  return row?.user_version ?? 0;
+}
+
+type Totals = { count: number; total: number };
+
+async function getTotals(db: SQLiteDatabase, table: string): Promise<Totals> {
+  const row = await db.getFirstAsync<Totals>(
+    `SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total FROM ${table}`,
+  );
+  return row ?? { count: 0, total: 0 };
+}
+
+/**
+ * Splits each v1 expense into a payment and one linked expense item. Runs in a single
+ * transaction and verifies counts and paise totals before dropping the old table, so
+ * any failure rolls back to the untouched v1 data.
+ */
+export async function migrateV1ToV2(db: SQLiteDatabase): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.execAsync(SCHEMA_V2_CREATE_SQL);
+    await db.execAsync(SCHEMA_V2_COPY_SQL);
+
+    const expenses = await getTotals(db, 'expenses');
+    const payments = await getTotals(db, 'payments');
+    const items = await getTotals(db, 'expense_items');
+    const matches = (t: Totals) => t.count === expenses.count && t.total === expenses.total;
+    if (!matches(payments) || !matches(items)) {
+      throw new Error(
+        `Migration check failed: ${expenses.count} expenses (${expenses.total} paise) became ` +
+          `${payments.count} payments (${payments.total}) and ${items.count} items (${items.total})`,
+      );
+    }
+
+    await db.execAsync(SCHEMA_V2_FINALIZE_SQL);
+    await db.execAsync('PRAGMA user_version = 2');
+  });
 }
 
 async function seedCategories(db: SQLiteDatabase): Promise<void> {

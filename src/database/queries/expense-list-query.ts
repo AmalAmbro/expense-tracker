@@ -7,6 +7,10 @@ function escapeLike(text: string): string {
   return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
+/** Selects expense items (`e`) with their payment's method (`p`), as `ExpenseRow`s. */
+export const EXPENSE_SELECT =
+  'SELECT e.*, p.payment_method_id FROM expense_items e JOIN payments p ON p.id = e.payment_id';
+
 /** Builds the SQL for listing expenses, newest first. Pure function — no I/O. */
 export function buildExpenseListQuery(filter: ExpenseFilter = {}): {
   sql: string;
@@ -18,11 +22,9 @@ export function buildExpenseListQuery(filter: ExpenseFilter = {}): {
   const search = filter.search?.trim();
   if (search) {
     const pattern = `%${escapeLike(search)}%`;
-    conditions.push(
-      `(e.description LIKE ? ESCAPE '\\' OR e.notes LIKE ? ESCAPE '\\'` +
-        ` OR c.name LIKE ? ESCAPE '\\' OR sc.name LIKE ? ESCAPE '\\')`,
-    );
-    params.push(pattern, pattern, pattern, pattern);
+    const searchable = ['e.description', 'e.notes', 'p.merchant_name', 'c.name', 'sc.name'];
+    conditions.push(`(${searchable.map((column) => `${column} LIKE ? ESCAPE '\\'`).join(' OR ')})`);
+    params.push(...searchable.map(() => pattern));
   }
   if (filter.startDate) {
     conditions.push('e.date >= ?');
@@ -37,7 +39,7 @@ export function buildExpenseListQuery(filter: ExpenseFilter = {}): {
     params.push(filter.categoryId, filter.categoryId);
   }
   if (filter.paymentMethodId) {
-    conditions.push('e.payment_method_id = ?');
+    conditions.push('p.payment_method_id = ?');
     params.push(filter.paymentMethodId);
   }
   if (filter.isEssential !== undefined) {
@@ -47,7 +49,7 @@ export function buildExpenseListQuery(filter: ExpenseFilter = {}): {
 
   const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
   const sql =
-    'SELECT e.* FROM expenses e' +
+    EXPENSE_SELECT +
     ' JOIN categories c ON c.id = e.category_id' +
     ' LEFT JOIN categories sc ON sc.id = e.subcategory_id' +
     where +

@@ -44,8 +44,10 @@ export function buildSeptember2026Expenses(): Expense[] {
     const date = `2026-09-${String(lineIndex + 1).padStart(2, '0')}`;
     line.amounts.split('+').forEach((amountText, amountIndex) => {
       const timestamp = `${date}T10:00:${String(amountIndex).padStart(2, '0')}.000Z`;
+      const id = `sep-${lineIndex}-${amountIndex}`;
       expenses.push({
-        id: `sep-${lineIndex}-${amountIndex}`,
+        id,
+        paymentId: `payment-${id}`,
         amount: parseAmountToPaise(amountText),
         date,
         categoryId: line.categoryId,

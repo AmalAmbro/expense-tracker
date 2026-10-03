@@ -21,11 +21,12 @@ export default function SettingsScreen() {
     setStatus({ state: 'working' });
     try {
       const { summary } = await createBackup();
+      const items = summary.expenseItemCount;
       setStatus({
         state: 'done',
-        message: `Backup created: ${summary.expenseCount} ${
-          summary.expenseCount === 1 ? 'expense' : 'expenses'
-        }, ${formatPaise(summary.totalAmount)} in total.`,
+        message: `Backup created: ${items} ${items === 1 ? 'expense' : 'expenses'}, ${formatPaise(
+          summary.expenseItemTotal,
+        )} in total.`,
       });
     } catch (err) {
       setStatus({

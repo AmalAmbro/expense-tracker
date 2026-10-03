@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 
 import {
   useCategoryRepository,
-  useExpenseRepository,
   usePaymentMethodRepository,
+  usePaymentRepository,
 } from '@/database/hooks';
 import { DATABASE_VERSION } from '@/database/migrations';
 import { shareBackupFile } from '@/features/settings/services/share-backup-file';
@@ -12,24 +12,24 @@ import {
   buildBackup,
   parseBackup,
   serializeBackup,
-  type Backup,
+  type BackupV2,
 } from '@/features/settings/utils/backup';
 
 /** Returns a function that backs up all data to a JSON file and offers to share it. */
 export function useCreateBackup() {
-  const expenseRepository = useExpenseRepository();
+  const paymentRepository = usePaymentRepository();
   const categoryRepository = useCategoryRepository();
   const paymentMethodRepository = usePaymentMethodRepository();
 
-  return useCallback(async (): Promise<Backup> => {
-    const [expenses, categories, paymentMethods] = await Promise.all([
-      expenseRepository.list(),
+  return useCallback(async (): Promise<BackupV2> => {
+    const [{ payments, items }, categories, paymentMethods] = await Promise.all([
+      paymentRepository.listAllWithItems(),
       categoryRepository.listAll(),
       paymentMethodRepository.listAll(),
     ]);
     const exportedAt = new Date();
     const backup = buildBackup(
-      { expenses, categories, paymentMethods },
+      { categories, paymentMethods, payments, expenseItems: items },
       { schemaVersion: DATABASE_VERSION, exportedAt },
     );
     const contents = serializeBackup(backup);
@@ -39,5 +39,5 @@ export function useCreateBackup() {
 
     await shareBackupFile(backupFileName(exportedAt), contents);
     return backup;
-  }, [expenseRepository, categoryRepository, paymentMethodRepository]);
+  }, [paymentRepository, categoryRepository, paymentMethodRepository]);
 }

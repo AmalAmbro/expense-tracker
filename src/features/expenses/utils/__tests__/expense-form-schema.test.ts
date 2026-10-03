@@ -8,6 +8,7 @@ import type { Expense } from '@/types/expense';
 
 const savedExpense: Expense = {
   id: 'exp-1',
+  paymentId: 'pay-1',
   amount: 3250,
   date: '2026-09-14',
   categoryId: 'food',
@@ -25,7 +26,7 @@ describe('expenseToFormValues / formValuesToExpense', () => {
     const values = expenseToFormValues(savedExpense);
     expect(values.amountText).toBe('32.50');
 
-    const { id, createdAt, updatedAt, ...expected } = savedExpense;
+    const { id, paymentId, createdAt, updatedAt, ...expected } = savedExpense;
     expect(formValuesToExpense(values)).toEqual(expected);
   });
 

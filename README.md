@@ -14,8 +14,8 @@ transactions, month navigation), and analytics (category breakdown, essential
 vs discretionary, daily spending, month-over-month comparison), and bulk entry
 (notes-style text such as `Chicken 200+90+90`, parsed deterministically,
 auto-categorised from an alias list, previewed, and saved atomically). Settings
-can back up all data to a JSON file via the system share sheet. CSV export is
-still to come.
+can back up all data to a JSON file via the system share sheet. Milestone 7
+split expenses into payments and expense items (see *Data model*).
 
 ## Stack
 
@@ -78,6 +78,26 @@ the provider composition root instead of a separate `app/providers` folder.
 
 Business logic and data access are kept out of screens — screens call into
 feature services/repositories, not SQL or parsing logic directly.
+
+## Data model
+
+Amounts are always integer paise (₹1 = 100).
+
+- **Payment** (`payments`): the money movement: amount, date, payment method,
+  provider, merchant, and status (`initiated` / `confirmed` / `failed` /
+  `unknown`).
+- **Expense item** (`expense_items`): what the money was spent on: category,
+  description, essential flag. Every item belongs to one payment; a payment may
+  cover several items. Items may total less than the payment (partially
+  allocated) but never more.
+- Category analytics aggregate expense items; payment-method analytics will
+  aggregate payments, so nothing is double-counted.
+- Recording an expense from the Add/Bulk screens creates one payment with one
+  item. Schema migrations live in `src/database/migrations`; the v1 → v2
+  migration runs in one transaction and verifies counts and totals before
+  dropping the old table.
+- Repository tests run against real SQLite through Node's built-in
+  `node:sqlite` (Node 22.13+), via `src/test-utils/node-sqlite-database.ts`.
 
 ## Notes
 
