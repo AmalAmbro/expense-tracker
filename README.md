@@ -15,7 +15,10 @@ vs discretionary, daily spending, month-over-month comparison), and bulk entry
 (notes-style text such as `Chicken 200+90+90`, parsed deterministically,
 auto-categorised from an alias list, previewed, and saved atomically). Settings
 can back up all data to a JSON file via the system share sheet. Milestone 7
-split expenses into payments and expense items (see *Data model*).
+split expenses into payments and expense items (see *Data model*). Milestone 8
+added **Pay (UPI)**: it opens a UPI app to pay (it never processes payments
+itself), records the payment as `initiated`, and counts it as spending only once
+the user confirms it went through.
 
 ## Stack
 
@@ -96,6 +99,22 @@ Amounts are always integer paise (₹1 = 100).
   item. Schema migrations live in `src/database/migrations`; the v1 → v2
   migration runs in one transaction and verifies counts and totals before
   dropping the old table.
+- Only items of `confirmed` payments count as spending (History, Home,
+  Analytics). UPI payments stay `initiated`/`unknown` under "Awaiting
+  confirmation" on the Pay screen until the user resolves them.
+- UPI launching is behind `PaymentLauncher`
+  (`src/features/upi/services/payment-launcher.{android,ios,}.ts`). Android
+  uses the local native module `modules/upi-intent`, which lists installed UPI
+  apps and opens the chosen one directly (`Intent.setPackage`) for a result.
+  iOS opens app URL schemes via `expo-linking` (no result is returned; scheme
+  paths are unverified); web is unsupported.
+- Tested behaviour: Google Pay refuses intent payments to personal UPI IDs
+  ("limit exceeded", regardless of link format) but accepts business UPI IDs.
+  Links for typed-in UPI IDs omit `tr`, which apps expect only alongside
+  merchant details (`mc`).
+- Because of `modules/upi-intent` (and other native modules), the app runs as a
+  development build, not Expo Go. After native changes, rebuild with
+  `npx expo prebuild --clean --platform android && npx expo run:android`.
 - Repository tests run against real SQLite through Node's built-in
   `node:sqlite` (Node 22.13+), via `src/test-utils/node-sqlite-database.ts`.
 

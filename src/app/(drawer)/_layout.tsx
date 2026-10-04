@@ -34,6 +34,16 @@ function BulkEntryIcon({ color, size }: DrawerIconProps) {
   );
 }
 
+function PayIcon({ color, size }: DrawerIconProps) {
+  return (
+    <SymbolView
+      name={{ ios: 'indianrupeesign.circle', android: 'currency_rupee', web: 'currency_rupee' }}
+      tintColor={color}
+      size={size}
+    />
+  );
+}
+
 function AnalyticsIcon({ color, size }: DrawerIconProps) {
   return (
     <SymbolView
@@ -68,6 +78,10 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="bulk-entry"
         options={{ title: 'Bulk Entry', drawerLabel: 'Bulk Entry', drawerIcon: BulkEntryIcon }}
+      />
+      <Drawer.Screen
+        name="pay"
+        options={{ title: 'Pay with UPI', drawerLabel: 'Pay (UPI)', drawerIcon: PayIcon }}
       />
       <Drawer.Screen
         name="analytics"

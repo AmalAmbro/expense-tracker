@@ -1,0 +1,18 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!--
+    Android 11+ hides other apps unless declared here; these let us list installed UPI
+    apps. Visibility is decided by matching this example against each app's intent
+    filters, and most UPI apps (CRED, HDFC, SBI, …) only accept "upi://pay" with the
+    "pay" host — a scheme-only "upi:" doesn't match them, so both forms are declared.
+  -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="upi" android:host="pay" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="upi" />
+    </intent>
+  </queries>
+</manifest>

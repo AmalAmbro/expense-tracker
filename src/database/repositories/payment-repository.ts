@@ -12,7 +12,12 @@ import type { ExpenseItemRow, PaymentRow } from '@/database/schema/tables';
 import { reconcilePayment } from '@/database/reconciliation';
 import { formatPaise } from '@/utils/money';
 import type { ExpenseItem, NewExpenseItem } from '@/types/expense';
-import type { NewPayment, Payment } from '@/types/payment';
+import {
+  PAYMENT_STATUSES,
+  type NewPayment,
+  type Payment,
+  type PaymentStatus,
+} from '@/types/payment';
 
 export function createPaymentRepository(db: SQLiteDatabase) {
   return {
@@ -50,6 +55,53 @@ export function createPaymentRepository(db: SQLiteDatabase) {
         throw new Error('Failed to read back the created payment');
       }
       return { payment: created, items: await this.listItems(paymentId) };
+    },
+
+    /** Records the outcome of a payment, e.g. once the user confirms it went through. */
+    async updateStatus(
+      id: string,
+      status: PaymentStatus,
+      details: { reference?: string | null } = {},
+    ): Promise<void> {
+      if (!PAYMENT_STATUSES.includes(status)) {
+        throw new Error(`Invalid payment status: "${status}"`);
+      }
+      const now = new Date().toISOString();
+      if (details.reference !== undefined) {
+        await db.runAsync(
+          'UPDATE payments SET status = ?, reference = ?, updated_at = ? WHERE id = ?',
+          status,
+          details.reference,
+          now,
+          id,
+        );
+      } else {
+        await db.runAsync(
+          'UPDATE payments SET status = ?, updated_at = ? WHERE id = ?',
+          status,
+          now,
+          id,
+        );
+      }
+    },
+
+    /**
+     * Deletes a payment and its items. Only for payments that never left the app
+     * (e.g. the chosen UPI app wasn't installed); recorded payments are edited instead.
+     */
+    async deleteUnsent(id: string): Promise<void> {
+      await db.runAsync("DELETE FROM payments WHERE id = ? AND status = 'initiated'", id);
+    },
+
+    /** Payments still waiting for the user to say what happened, newest first. */
+    async listAwaitingConfirmation(): Promise<{ payment: Payment; items: ExpenseItem[] }[]> {
+      const rows = await db.getAllAsync<PaymentRow>(
+        `SELECT * FROM payments WHERE status IN ('initiated', 'unknown')
+         ORDER BY created_at DESC`,
+      );
+      return Promise.all(
+        rows.map(async (row) => ({ payment: toPayment(row), items: await this.listItems(row.id) })),
+      );
     },
 
     async getById(id: string): Promise<Payment | null> {

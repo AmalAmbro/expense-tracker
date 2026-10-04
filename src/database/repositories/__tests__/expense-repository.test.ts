@@ -261,3 +261,100 @@ describe('paymentRepository: one payment, several items', () => {
     });
   });
 });
+
+describe('payment confirmation (UPI flow)', () => {
+  async function initiate(db: SQLiteDatabase, ids: Ids, description: string) {
+    return createPaymentRepository(db).createWithItems(
+      {
+        amount: 5000,
+        date: '2026-10-03',
+        paymentMethodId: ids.upi,
+        provider: 'gpay',
+        merchantName: 'Corner Bakery',
+        merchantVpa: 'bakery@okaxis',
+        status: 'initiated',
+        reference: 'ET1',
+        notes: null,
+      },
+      [
+        {
+          amount: 5000,
+          date: '2026-10-03',
+          categoryId: ids.food,
+          subcategoryId: null,
+          description,
+          isEssential: true,
+          notes: null,
+        },
+      ],
+    );
+  }
+
+  it('does not count a payment as spending until it is confirmed', async () => {
+    const { db, ids } = await setUp();
+    const expenses = createExpenseRepository(db);
+    const payments = createPaymentRepository(db);
+    const { payment } = await initiate(db, ids, 'Bread');
+
+    expect(await expenses.list()).toEqual([]);
+    expect(await expenses.getMonthlyTotal('2026-10')).toBe(0);
+
+    await payments.updateStatus(payment.id, 'confirmed', { reference: 'AXI123' });
+    expect((await expenses.list()).map((e) => e.description)).toEqual(['Bread']);
+    expect(await expenses.getMonthlyTotal('2026-10')).toBe(5000);
+    expect(await payments.getById(payment.id)).toMatchObject({
+      status: 'confirmed',
+      reference: 'AXI123',
+    });
+  });
+
+  it('never counts a failed payment', async () => {
+    const { db, ids } = await setUp();
+    const payments = createPaymentRepository(db);
+    const { payment } = await initiate(db, ids, 'Bread');
+
+    await payments.updateStatus(payment.id, 'failed');
+    expect(await createExpenseRepository(db).list()).toEqual([]);
+    expect(await payments.listAwaitingConfirmation()).toEqual([]);
+  });
+
+  it('lists initiated and unknown payments, with their items, as awaiting confirmation', async () => {
+    const { db, ids } = await setUp();
+    const payments = createPaymentRepository(db);
+    const first = await initiate(db, ids, 'Bread');
+    const second = await initiate(db, ids, 'Buns');
+    await payments.updateStatus(second.payment.id, 'unknown');
+    await createExpenseRepository(db).create(newExpense(ids)); // confirmed: not listed
+
+    const awaiting = await payments.listAwaitingConfirmation();
+    expect(awaiting.map(({ payment }) => payment.id).sort()).toEqual(
+      [first.payment.id, second.payment.id].sort(),
+    );
+    expect(awaiting.flatMap(({ items }) => items.map((i) => i.description)).sort()).toEqual([
+      'Bread',
+      'Buns',
+    ]);
+  });
+
+  it('rejects an invalid status', async () => {
+    const { db, ids } = await setUp();
+    const { payment } = await initiate(db, ids, 'Bread');
+    await expect(
+      createPaymentRepository(db).updateStatus(payment.id, 'paid' as never),
+    ).rejects.toThrow('Invalid payment status');
+  });
+
+  it('deletes only payments that were never sent', async () => {
+    const { db, ids } = await setUp();
+    const payments = createPaymentRepository(db);
+    const unsent = await initiate(db, ids, 'Bread');
+    const confirmed = await createExpenseRepository(db).create(newExpense(ids));
+
+    await payments.deleteUnsent(unsent.payment.id);
+    await payments.deleteUnsent(confirmed.paymentId);
+
+    expect(await payments.getById(unsent.payment.id)).toBeNull();
+    expect(await count(db, 'expense_items')).toBe(1); // the unsent item went with it
+    expect(await payments.getById(confirmed.paymentId)).not.toBeNull();
+  });
+});

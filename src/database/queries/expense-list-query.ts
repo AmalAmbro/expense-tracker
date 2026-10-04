@@ -11,12 +11,16 @@ function escapeLike(text: string): string {
 export const EXPENSE_SELECT =
   'SELECT e.*, p.payment_method_id FROM expense_items e JOIN payments p ON p.id = e.payment_id';
 
-/** Builds the SQL for listing expenses, newest first. Pure function — no I/O. */
+/**
+ * Builds the SQL for listing expenses, newest first. Only items of confirmed payments
+ * count as spending: initiated, failed, and unknown payments are excluded until the
+ * user confirms them. Pure function — no I/O.
+ */
 export function buildExpenseListQuery(filter: ExpenseFilter = {}): {
   sql: string;
   params: SQLParam[];
 } {
-  const conditions: string[] = [];
+  const conditions: string[] = ["p.status = 'confirmed'"];
   const params: SQLParam[] = [];
 
   const search = filter.search?.trim();
@@ -47,7 +51,7 @@ export function buildExpenseListQuery(filter: ExpenseFilter = {}): {
     params.push(filter.isEssential ? 1 : 0);
   }
 
-  const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+  const where = ` WHERE ${conditions.join(' AND ')}`;
   const sql =
     EXPENSE_SELECT +
     ' JOIN categories c ON c.id = e.category_id' +

@@ -1,9 +1,9 @@
 import { buildExpenseListQuery } from '@/database/queries/expense-list-query';
 
 describe('buildExpenseListQuery', () => {
-  it('lists everything newest first when no filter is given', () => {
+  it('lists confirmed spending newest first when no filter is given', () => {
     const { sql, params } = buildExpenseListQuery();
-    expect(sql).not.toContain('WHERE');
+    expect(sql).toContain("WHERE p.status = 'confirmed' ORDER BY");
     expect(sql).toMatch(/ORDER BY e\.date DESC, e\.created_at DESC$/);
     expect(params).toEqual([]);
   });
@@ -29,7 +29,7 @@ describe('buildExpenseListQuery', () => {
 
   it('ignores a whitespace-only search', () => {
     const { sql, params } = buildExpenseListQuery({ search: '   ' });
-    expect(sql).not.toContain('WHERE');
+    expect(sql).not.toContain('LIKE');
     expect(params).toEqual([]);
   });
 
@@ -47,7 +47,7 @@ describe('buildExpenseListQuery', () => {
       isEssential: false,
     });
     expect(sql).toContain(
-      'WHERE e.date >= ? AND e.date <= ? AND (e.category_id = ? OR e.subcategory_id = ?)' +
+      "WHERE p.status = 'confirmed' AND e.date >= ? AND e.date <= ? AND (e.category_id = ? OR e.subcategory_id = ?)" +
         ' AND p.payment_method_id = ? AND e.is_essential = ?',
     );
     expect(params).toEqual(['2026-09-01', '2026-09-30', 'food', 'food', 'upi', 0]);
