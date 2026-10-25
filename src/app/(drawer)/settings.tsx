@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -48,9 +49,9 @@ export default function SettingsScreen() {
             goes — Files, Google Drive, email — the app doesn’t upload it anywhere.
           </ThemedText>
           <Button
-            title={status.state === 'working' ? 'Creating backup…' : 'Back up data (JSON)'}
+            title="Back up data (JSON)"
             onPress={handleBackup}
-            disabled={status.state === 'working'}
+            loading={status.state === 'working'}
           />
           {status.state === 'done' ? (
             <ThemedText type="small" accessibilityLiveRegion="polite">
@@ -58,7 +59,7 @@ export default function SettingsScreen() {
             </ThemedText>
           ) : null}
           {status.state === 'error' ? (
-            <ThemedText type="small" style={styles.errorText} accessibilityLiveRegion="polite">
+            <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
               {status.message}
             </ThemedText>
           ) : null}
@@ -78,8 +79,5 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.three,
-  },
-  errorText: {
-    color: '#C0392B',
   },
 });

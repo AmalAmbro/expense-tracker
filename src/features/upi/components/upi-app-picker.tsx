@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ui/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import type { UpiProvider } from '@/features/upi/providers';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.one,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.control,
     borderWidth: 2,
   },
   pressed: {

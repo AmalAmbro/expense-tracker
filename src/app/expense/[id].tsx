@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useExpenseRepository } from '@/database/hooks';
@@ -70,7 +71,7 @@ export default function EditExpenseScreen() {
         <ThemedText>
           {state.status === 'not-found' ? 'This expense no longer exists.' : state.message}
         </ThemedText>
-        <Button title="Go back" onPress={() => router.back()} />
+        <Button title="Go back" variant="secondary" onPress={() => router.back()} />
       </View>
     );
   }
@@ -86,15 +87,15 @@ export default function EditExpenseScreen() {
       footer={
         <View style={styles.deleteSection}>
           {deleteError ? (
-            <ThemedText type="small" style={styles.errorText}>
+            <ThemedText type="small" themeColor="danger">
               {deleteError}
             </ThemedText>
           ) : null}
           <Button
             title="Delete Expense"
-            color="#C0392B"
+            variant="destructive"
             onPress={handleDelete}
-            disabled={isDeleting}
+            loading={isDeleting}
           />
         </View>
       }
@@ -113,8 +114,5 @@ const styles = StyleSheet.create({
   deleteSection: {
     marginTop: Spacing.four,
     gap: Spacing.two,
-  },
-  errorText: {
-    color: '#C0392B',
   },
 });

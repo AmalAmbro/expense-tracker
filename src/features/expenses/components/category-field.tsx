@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ControlSize, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import type { Category } from '@/types/category';
 
 type CategoryValue = { categoryId: string; subcategoryId: string | null };
@@ -16,6 +18,7 @@ type CategoryFieldProps = {
 };
 
 export function CategoryField({ categories, value, onChange, error }: CategoryFieldProps) {
+  const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [browsingParentId, setBrowsingParentId] = useState<string | null>(null);
 
@@ -85,17 +88,25 @@ export function CategoryField({ categories, value, onChange, error }: CategoryFi
         <ThemedView style={styles.modal}>
           {browsingParentId ? (
             <>
-              <Pressable onPress={() => setBrowsingParentId(null)} style={styles.backRow}>
-                <ThemedText type="link">← Back</ThemedText>
-              </Pressable>
-              <Pressable onPress={selectParentWithoutSubcategory} style={styles.row}>
+              <TextButton
+                title="← Back"
+                onPress={() => setBrowsingParentId(null)}
+                style={styles.backRow}
+              />
+              <Pressable
+                onPress={selectParentWithoutSubcategory}
+                style={[styles.row, { borderBottomColor: theme.border }]}
+              >
                 <ThemedText>Just &ldquo;{browsingParent?.name}&rdquo;</ThemedText>
               </Pressable>
               <FlatList
                 data={children}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                  <Pressable onPress={() => selectChild(item)} style={styles.row}>
+                  <Pressable
+                    onPress={() => selectChild(item)}
+                    style={[styles.row, { borderBottomColor: theme.border }]}
+                  >
                     <ThemedText>{item.name}</ThemedText>
                   </Pressable>
                 )}
@@ -106,15 +117,16 @@ export function CategoryField({ categories, value, onChange, error }: CategoryFi
               data={topLevelCategories}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <Pressable onPress={() => selectParent(item)} style={styles.row}>
+                <Pressable
+                  onPress={() => selectParent(item)}
+                  style={[styles.row, { borderBottomColor: theme.border }]}
+                >
                   <ThemedText>{item.name}</ThemedText>
                 </Pressable>
               )}
             />
           )}
-          <Pressable onPress={close} style={styles.closeRow}>
-            <ThemedText type="link">Cancel</ThemedText>
-          </Pressable>
+          <TextButton title="Cancel" onPress={close} style={styles.closeRow} />
         </ThemedView>
       </Modal>
     </View>
@@ -123,8 +135,10 @@ export function CategoryField({ categories, value, onChange, error }: CategoryFi
 
 const styles = StyleSheet.create({
   field: {
-    padding: Spacing.three,
-    borderRadius: Spacing.two,
+    minHeight: ControlSize.height,
+    paddingHorizontal: ControlSize.paddingHorizontal,
+    justifyContent: 'center',
+    borderRadius: Radius.control,
   },
   error: {
     marginTop: Spacing.one,
@@ -135,15 +149,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
   },
   backRow: {
-    paddingVertical: Spacing.three,
+    alignSelf: 'flex-start',
+    marginVertical: Spacing.two,
   },
   row: {
     paddingVertical: Spacing.three,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
   },
   closeRow: {
-    paddingVertical: Spacing.four,
-    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: Spacing.three,
   },
 });

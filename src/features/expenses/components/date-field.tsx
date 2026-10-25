@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ControlSize, Radius } from '@/constants/theme';
 import { formatDisplayDate, fromISODate, toISODate } from '@/utils/date';
 
 type DateFieldProps = {
@@ -54,7 +54,9 @@ export function DateField({ value, onChange }: DateFieldProps) {
 
 const styles = StyleSheet.create({
   field: {
-    padding: Spacing.three,
-    borderRadius: Spacing.two,
+    minHeight: ControlSize.height,
+    paddingHorizontal: ControlSize.paddingHorizontal,
+    justifyContent: 'center',
+    borderRadius: Radius.control,
   },
 });

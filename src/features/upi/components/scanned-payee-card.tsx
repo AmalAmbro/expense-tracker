@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import type { ScannedUpiQr } from '@/features/upi/utils/upi-qr';
 import { formatPaise } from '@/utils/money';
 
@@ -20,14 +21,7 @@ export function ScannedPayeeCard({ qr, onClear }: ScannedPayeeCardProps) {
         <ThemedText type="small" themeColor="textSecondary">
           {qr.isMerchant ? 'Merchant QR' : 'Personal UPI QR'}
         </ThemedText>
-        <Pressable
-          onPress={onClear}
-          accessibilityRole="button"
-          accessibilityLabel="Clear scanned QR"
-          hitSlop={8}
-        >
-          <ThemedText type="link">Clear</ThemedText>
-        </Pressable>
+        <TextButton title="Clear" onPress={onClear} accessibilityLabel="Clear scanned QR" />
       </View>
       <ThemedText type="smallBold" style={styles.name}>
         {qr.payeeName ?? qr.payeeVpa}
@@ -57,7 +51,7 @@ const styles = StyleSheet.create({
   card: {
     gap: Spacing.one,
     padding: Spacing.three,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.control,
   },
   header: {
     flexDirection: 'row',

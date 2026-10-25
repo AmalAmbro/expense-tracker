@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, SectionList, StyleSheet, View } from 'react-native';
+import { ScrollView, SectionList, StyleSheet, View } from 'react-native';
 
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedTextInput } from '@/components/ui/themed-text-input';
 import { ThemedView } from '@/components/ui/themed-view';
@@ -20,12 +21,10 @@ import {
   toExpenseFilter,
   type HistoryFilters,
 } from '@/features/expenses/utils/history-filters';
-import { useTheme } from '@/hooks/use-theme';
 import { formatDayHeading, todayISODate } from '@/utils/date';
 import { addPaise, formatPaise } from '@/utils/money';
 
 export default function HistoryScreen() {
-  const theme = useTheme();
   const [filters, setFilters] = useState<HistoryFilters>(DEFAULT_HISTORY_FILTERS);
   const today = todayISODate();
 
@@ -78,7 +77,6 @@ export default function HistoryScreen() {
           autoCorrect={false}
           clearButtonMode="while-editing"
           returnKeyType="search"
-          style={[styles.search, { backgroundColor: theme.backgroundElement }]}
         />
         <ScrollView
           horizontal
@@ -114,14 +112,11 @@ export default function HistoryScreen() {
             isActive={filters.essential !== DEFAULT_HISTORY_FILTERS.essential}
           />
           {hasActiveFilters(filters) ? (
-            <Pressable
-              onPress={() => updateFilters({ ...DEFAULT_HISTORY_FILTERS, search: filters.search })}
-              accessibilityRole="button"
+            <TextButton
+              title="Clear"
               accessibilityLabel="Clear filters"
-              style={styles.clear}
-            >
-              <ThemedText type="link">Clear</ThemedText>
-            </Pressable>
+              onPress={() => updateFilters({ ...DEFAULT_HISTORY_FILTERS, search: filters.search })}
+            />
           ) : null}
         </ScrollView>
         {expenses.length > 0 ? (
@@ -132,7 +127,11 @@ export default function HistoryScreen() {
         ) : null}
       </View>
 
-      {error ? <ThemedText style={[styles.message, styles.errorText]}>{error}</ThemedText> : null}
+      {error ? (
+        <ThemedText themeColor="danger" style={styles.message}>
+          {error}
+        </ThemedText>
+      ) : null}
 
       <SectionList
         sections={sections}
@@ -184,20 +183,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two,
     gap: Spacing.two,
   },
-  search: {
-    fontSize: 16,
-    minHeight: 44,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.two,
-  },
   chips: {
     gap: Spacing.two,
     alignItems: 'center',
-  },
-  clear: {
-    minHeight: 36,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.two,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -208,8 +196,5 @@ const styles = StyleSheet.create({
   message: {
     textAlign: 'center',
     padding: Spacing.four,
-  },
-  errorText: {
-    color: '#C0392B',
   },
 });

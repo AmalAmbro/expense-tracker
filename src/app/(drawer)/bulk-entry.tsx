@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Button, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedTextInput } from '@/components/ui/themed-text-input';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useExpenseRepository } from '@/database/hooks';
 import { BulkDraftRow } from '@/features/bulk-entry/components/bulk-draft-row';
 import {
@@ -21,14 +22,12 @@ import { parseBulkInput } from '@/features/bulk-entry/utils/parse-bulk-input';
 import { DateField } from '@/features/expenses/components/date-field';
 import { PaymentMethodField } from '@/features/expenses/components/payment-method-field';
 import { useExpenseOptions } from '@/features/expenses/hooks/use-expense-options';
-import { useTheme } from '@/hooks/use-theme';
 import { todayISODate } from '@/utils/date';
 import { formatPaise } from '@/utils/money';
 
 const PLACEHOLDER = 'Chicken 200+90+90\nEggs 140\nBus 25+30\nPetrol 500';
 
 export default function BulkEntryScreen() {
-  const theme = useTheme();
   const expenseRepository = useExpenseRepository();
   const { categories, paymentMethods, isLoading, error: optionsError } = useExpenseOptions();
   const matchCategory = useMemo(() => createCategoryMatcher(categories), [categories]);
@@ -85,7 +84,9 @@ export default function BulkEntryScreen() {
   if (optionsError) {
     return (
       <ThemedView style={styles.container}>
-        <ThemedText style={[styles.content, styles.errorText]}>{optionsError}</ThemedText>
+        <ThemedText themeColor="danger" style={styles.content}>
+          {optionsError}
+        </ThemedText>
       </ThemedView>
     );
   }
@@ -106,7 +107,7 @@ export default function BulkEntryScreen() {
             autoCapitalize="sentences"
             textAlignVertical="top"
             accessibilityLabel="Expenses, one per line"
-            style={[styles.textArea, { backgroundColor: theme.backgroundElement }]}
+            style={styles.textArea}
           />
           <Button title="Preview" onPress={showPreview} disabled={!text.trim()} />
         </ScrollView>
@@ -141,7 +142,7 @@ export default function BulkEntryScreen() {
                 Line {error.lineNumber}: “{error.raw.trim()}” — {error.message}
               </ThemedText>
             ))}
-            <Button title="Edit text" onPress={() => setPreview(null)} />
+            <Button title="Edit text" variant="secondary" onPress={() => setPreview(null)} />
           </ThemedView>
         ) : null}
 
@@ -175,14 +176,20 @@ export default function BulkEntryScreen() {
             {blocker}
           </ThemedText>
         ) : null}
-        {saveError ? <ThemedText style={styles.errorText}>{saveError}</ThemedText> : null}
+        {saveError ? <ThemedText themeColor="danger">{saveError}</ThemedText> : null}
 
         <Button
           title={`Save ${drafts.length} ${drafts.length === 1 ? 'expense' : 'expenses'} · ${total}`}
           onPress={save}
-          disabled={blocker !== null || isSaving}
+          disabled={blocker !== null}
+          loading={isSaving}
         />
-        <Button title="Back to edit" onPress={() => setPreview(null)} disabled={isSaving} />
+        <Button
+          title="Back to edit"
+          variant="secondary"
+          onPress={() => setPreview(null)}
+          disabled={isSaving}
+        />
       </ScrollView>
     </ThemedView>
   );
@@ -199,10 +206,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 240,
-    fontSize: 16,
     lineHeight: 24,
-    padding: Spacing.three,
-    borderRadius: Spacing.two,
   },
   tabular: {
     fontVariant: ['tabular-nums'],
@@ -210,12 +214,9 @@ const styles = StyleSheet.create({
   errorBox: {
     gap: Spacing.two,
     padding: Spacing.three,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.control,
   },
   field: {
     gap: Spacing.two,
-  },
-  errorText: {
-    color: '#C0392B',
   },
 });

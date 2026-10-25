@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet } from 'react-native';
 
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ControlSize, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export type FilterOption<T> = { value: T; label: string };
 
@@ -19,6 +21,7 @@ type FilterChipProps<T> = {
 
 /** A compact button showing the current filter value; tapping it opens a list of options. */
 export function FilterChip<T>({ name, options, value, onChange, isActive }: FilterChipProps<T>) {
+  const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
 
@@ -58,7 +61,7 @@ export function FilterChip<T>({ name, options, value, onChange, isActive }: Filt
                 onPress={() => select(item)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: item.value === value }}
-                style={styles.row}
+                style={[styles.row, { borderBottomColor: theme.border }]}
               >
                 <ThemedText type={item.value === value ? 'smallBold' : 'default'}>
                   {item.value === value ? '✓ ' : ''}
@@ -67,13 +70,7 @@ export function FilterChip<T>({ name, options, value, onChange, isActive }: Filt
               </Pressable>
             )}
           />
-          <Pressable
-            onPress={() => setIsOpen(false)}
-            accessibilityRole="button"
-            style={styles.closeRow}
-          >
-            <ThemedText type="link">Cancel</ThemedText>
-          </Pressable>
+          <TextButton title="Cancel" onPress={() => setIsOpen(false)} style={styles.closeRow} />
         </ThemedView>
       </Modal>
     </>
@@ -82,10 +79,10 @@ export function FilterChip<T>({ name, options, value, onChange, isActive }: Filt
 
 const styles = StyleSheet.create({
   chip: {
-    minHeight: 36,
+    minHeight: ControlSize.compactHeight,
     justifyContent: 'center',
-    paddingHorizontal: Spacing.three,
-    borderRadius: 18,
+    paddingHorizontal: ControlSize.paddingHorizontal,
+    borderRadius: Radius.control,
   },
   modal: {
     flex: 1,
@@ -98,10 +95,9 @@ const styles = StyleSheet.create({
   row: {
     paddingVertical: Spacing.three,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
   },
   closeRow: {
-    paddingVertical: Spacing.four,
-    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: Spacing.three,
   },
 });

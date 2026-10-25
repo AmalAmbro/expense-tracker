@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ControlSize, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import type { PaymentMethod } from '@/types/payment-method';
 
 type PaymentMethodFieldProps = {
@@ -19,6 +21,7 @@ export function PaymentMethodField({
   onChange,
   error,
 }: PaymentMethodFieldProps) {
+  const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const selected = paymentMethods.find((method) => method.id === value);
 
@@ -46,14 +49,15 @@ export function PaymentMethodField({
             data={paymentMethods}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <Pressable onPress={() => select(item)} style={styles.row}>
+              <Pressable
+                onPress={() => select(item)}
+                style={[styles.row, { borderBottomColor: theme.border }]}
+              >
                 <ThemedText>{item.name}</ThemedText>
               </Pressable>
             )}
           />
-          <Pressable onPress={() => setIsOpen(false)} style={styles.closeRow}>
-            <ThemedText type="link">Cancel</ThemedText>
-          </Pressable>
+          <TextButton title="Cancel" onPress={() => setIsOpen(false)} style={styles.closeRow} />
         </ThemedView>
       </Modal>
     </View>
@@ -62,8 +66,10 @@ export function PaymentMethodField({
 
 const styles = StyleSheet.create({
   field: {
-    padding: Spacing.three,
-    borderRadius: Spacing.two,
+    minHeight: ControlSize.height,
+    paddingHorizontal: ControlSize.paddingHorizontal,
+    justifyContent: 'center',
+    borderRadius: Radius.control,
   },
   error: {
     marginTop: Spacing.one,
@@ -76,10 +82,9 @@ const styles = StyleSheet.create({
   row: {
     paddingVertical: Spacing.three,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
   },
   closeRow: {
-    paddingVertical: Spacing.four,
-    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: Spacing.three,
   },
 });

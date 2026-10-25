@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ui/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { describeChange, type CategoryComparison } from '@/features/analytics/utils/analytics';
 import { formatPaise, subtractPaise } from '@/utils/money';
 
@@ -24,6 +25,7 @@ export function MonthComparison({
   currentLabel,
   categoryNameById,
 }: MonthComparisonProps) {
+  const theme = useTheme();
   const totalRow: CategoryComparison = {
     categoryId: 'total',
     previous: previousTotal,
@@ -33,7 +35,7 @@ export function MonthComparison({
 
   return (
     <View>
-      <View style={[styles.row, styles.headerRow]}>
+      <View style={[styles.row, { borderBottomColor: theme.border }, styles.headerRow]}>
         <ThemedText type="smallBold" style={styles.nameColumn}>
           Category
         </ThemedText>
@@ -51,7 +53,11 @@ export function MonthComparison({
         return (
           <View
             key={row.categoryId}
-            style={[styles.row, row === totalRow && styles.totalRow]}
+            style={[
+              styles.row,
+              { borderBottomColor: theme.border },
+              row === totalRow && styles.totalRow,
+            ]}
             accessible
             accessibilityLabel={`${name}: ${previousLabel} ${formatPaise(row.previous)}, ${currentLabel} ${formatPaise(row.current)}. ${change}.`}
           >
@@ -83,7 +89,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingVertical: Spacing.two,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
   },
   headerRow: {
     paddingTop: 0,

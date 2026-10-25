@@ -14,6 +14,15 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
+    /** Primary button fill, and the label colour on it. */
+    primary: '#000000',
+    onPrimary: '#ffffff',
+    /** Text buttons and links. */
+    link: '#3c87f7',
+    /** Destructive actions and error text. */
+    danger: '#C0392B',
+    /** Hairline separators and outlines. */
+    border: '#cccccc',
   },
   dark: {
     text: '#ffffff',
@@ -21,10 +30,27 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    primary: '#ffffff',
+    onPrimary: '#000000',
+    link: '#3c87f7',
+    /** Lighter than the light-mode red so it stays readable on black. */
+    danger: '#FF6B5E',
+    border: '#3A3D42',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+/**
+ * Colours for UI drawn over the live camera image. Fixed in both light and dark mode,
+ * because what's behind them is the camera feed, not the app background.
+ */
+export const CameraOverlay = {
+  background: '#000000',
+  scrim: 'rgba(0, 0, 0, 0.6)',
+  text: '#ffffff',
+  frame: '#ffffff',
+} as const;
 
 export const Fonts = Platform.select({
   ios: {
@@ -59,4 +85,18 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+/** One corner radius for every control (buttons, links, inputs, chips, tiles) and card. */
+export const Radius = {
+  control: 12,
+} as const;
+
+/** Shared control sizing. Heights meet the 44–48 pt minimum touch target. */
+export const ControlSize = {
+  /** Buttons, inputs, and picker fields. */
+  height: 48,
+  /** Text buttons and chips. */
+  compactHeight: 44,
+  paddingHorizontal: Spacing.three,
 } as const;

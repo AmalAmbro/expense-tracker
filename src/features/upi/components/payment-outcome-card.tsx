@@ -1,8 +1,9 @@
-import { Button, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { providerDisplayName } from '@/features/upi/providers';
 import type { UpiAppResponse } from '@/features/upi/utils/upi-link';
 import { formatDisplayDate } from '@/utils/date';
@@ -57,10 +58,27 @@ export function PaymentOutcomeCard({
         </ThemedText>
       ) : null}
       <View style={styles.actions}>
-        <Button title="Yes, paid" onPress={() => onResolve('confirmed')} disabled={disabled} />
-        <Button title="No, failed" onPress={() => onResolve('failed')} disabled={disabled} />
+        <Button
+          title="Yes, paid"
+          onPress={() => onResolve('confirmed')}
+          disabled={disabled}
+          style={styles.action}
+        />
+        <Button
+          title="No, failed"
+          variant="destructive"
+          onPress={() => onResolve('failed')}
+          disabled={disabled}
+          style={styles.action}
+        />
         {payment.status !== 'unknown' ? (
-          <Button title="Not sure" onPress={() => onResolve('unknown')} disabled={disabled} />
+          <Button
+            title="Not sure"
+            variant="secondary"
+            onPress={() => onResolve('unknown')}
+            disabled={disabled}
+            style={styles.action}
+          />
         ) : null}
       </View>
     </ThemedView>
@@ -71,11 +89,14 @@ const styles = StyleSheet.create({
   card: {
     gap: Spacing.two,
     padding: Spacing.three,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.control,
   },
   actions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.two,
+  },
+  action: {
+    flexGrow: 1,
   },
 });

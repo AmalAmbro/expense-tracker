@@ -77,7 +77,7 @@ export default function AnalyticsScreen() {
           </ThemedText>
         </View>
 
-        {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
+        {error ? <ThemedText themeColor="danger">{error}</ThemedText> : null}
 
         {!isLoading && !hasCurrent ? (
           <ThemedText themeColor="textSecondary" style={styles.centered}>
@@ -162,7 +162,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   errorText: {
-    color: '#C0392B',
     textAlign: 'center',
   },
 });

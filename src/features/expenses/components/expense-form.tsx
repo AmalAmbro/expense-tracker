@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, type ReactNode } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { Button, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedTextInput } from '@/components/ui/themed-text-input';
 import { Spacing } from '@/constants/theme';
@@ -86,7 +87,7 @@ export function ExpenseForm({
             keyboardType="decimal-pad"
             placeholder="0"
             accessibilityLabel="Amount in rupees"
-            style={styles.amountInput}
+            size="large"
           />
         )}
       />
@@ -103,7 +104,6 @@ export function ExpenseForm({
             onBlur={onBlur}
             placeholder="Tea"
             accessibilityLabel="Description"
-            style={styles.textInput}
           />
         )}
       />
@@ -167,14 +167,13 @@ export function ExpenseForm({
             onBlur={onBlur}
             multiline
             accessibilityLabel="Notes"
-            style={styles.textInput}
           />
         )}
       />
 
       {submitError ? <ErrorText message={submitError} /> : null}
 
-      <Button title={submitLabel} onPress={submit} disabled={isSubmitting} />
+      <Button title={submitLabel} onPress={submit} loading={isSubmitting} />
       {footer}
     </ScrollView>
   );
@@ -183,7 +182,7 @@ export function ExpenseForm({
 function ErrorText({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <ThemedText type="small" style={styles.errorText}>
+    <ThemedText type="small" themeColor="danger">
       {message}
     </ThemedText>
   );
@@ -193,19 +192,6 @@ const styles = StyleSheet.create({
   container: {
     padding: Spacing.four,
     gap: Spacing.two,
-  },
-  amountInput: {
-    fontSize: 32,
-    paddingVertical: Spacing.two,
-  },
-  textInput: {
-    fontSize: 16,
-    paddingVertical: Spacing.two,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
-  },
-  errorText: {
-    color: '#C0392B',
   },
   essentialRow: {
     flexDirection: 'row',

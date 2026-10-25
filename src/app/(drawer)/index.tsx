@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Button } from '@/components/ui/button';
+import { TextButton } from '@/components/ui/text-button';
+import { Radius, Spacing } from '@/constants/theme';
 import { CategoryTotals } from '@/features/dashboard/components/category-totals';
 import { MonthSwitcher } from '@/features/dashboard/components/month-switcher';
 import { buildDashboardSummary } from '@/features/dashboard/utils/dashboard-summary';
@@ -13,12 +15,10 @@ import { ExpenseListItem } from '@/features/expenses/components/expense-list-ite
 import { useExpenseList } from '@/features/expenses/hooks/use-expense-list';
 import { useExpenseOptions } from '@/features/expenses/hooks/use-expense-options';
 import { formatCategoryLabel } from '@/features/expenses/utils/category-label';
-import { useTheme } from '@/hooks/use-theme';
 import { currentMonth, getMonthDateRange, todayISODate } from '@/utils/date';
 import { formatPaise } from '@/utils/money';
 
 export default function HomeScreen() {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const thisMonth = currentMonth();
   const today = todayISODate();
@@ -59,7 +59,11 @@ export default function HomeScreen() {
           ) : null}
         </View>
 
-        {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
+        {error ? (
+          <ThemedText themeColor="danger" style={styles.errorText}>
+            {error}
+          </ThemedText>
+        ) : null}
 
         {!isLoading && summary.transactionCount === 0 ? (
           <ThemedText themeColor="textSecondary" style={styles.empty}>
@@ -86,13 +90,7 @@ export default function HomeScreen() {
               <ThemedText type="smallBold" accessibilityRole="header">
                 Recent
               </ThemedText>
-              <Pressable
-                onPress={() => router.navigate('/history')}
-                accessibilityRole="link"
-                hitSlop={8}
-              >
-                <ThemedText type="linkPrimary">See all</ThemedText>
-              </Pressable>
+              <TextButton title="See all" onPress={() => router.navigate('/history')} />
             </View>
             <ThemedView type="backgroundElement" style={styles.recentList}>
               {summary.recent.map((expense) => (
@@ -114,47 +112,24 @@ export default function HomeScreen() {
       </ScrollView>
 
       <View style={[styles.addBar, { paddingBottom: Math.max(insets.bottom, Spacing.three) }]}>
-        <Pressable
-          onPress={() => router.push('/add-expense')}
-          accessibilityRole="button"
+        <Button
+          title="+ Add Expense"
           accessibilityLabel="Add expense"
-          style={({ pressed }) => [
-            styles.addButton,
-            styles.primaryButton,
-            { backgroundColor: theme.text },
-            pressed && styles.pressed,
-          ]}
-        >
-          <ThemedText style={[styles.addButtonText, { color: theme.background }]}>
-            + Add Expense
-          </ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={() => router.navigate('/bulk-entry')}
-          accessibilityRole="button"
+          onPress={() => router.push('/add-expense')}
+          style={styles.mainAction}
+        />
+        <Button
+          title="Bulk"
+          variant="secondary"
           accessibilityLabel="Bulk entry"
-          style={({ pressed }) => [
-            styles.addButton,
-            styles.secondaryButton,
-            { backgroundColor: theme.backgroundElement },
-            pressed && styles.pressed,
-          ]}
-        >
-          <ThemedText style={styles.addButtonText}>Bulk</ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push('/scan')}
-          accessibilityRole="button"
+          onPress={() => router.navigate('/bulk-entry')}
+        />
+        <Button
+          title="Scan"
+          variant="secondary"
           accessibilityLabel="Scan a UPI QR code to pay"
-          style={({ pressed }) => [
-            styles.addButton,
-            styles.secondaryButton,
-            { backgroundColor: theme.backgroundElement },
-            pressed && styles.pressed,
-          ]}
-        >
-          <ThemedText style={styles.addButtonText}>Scan</ThemedText>
-        </Pressable>
+          onPress={() => router.push('/scan')}
+        />
       </View>
     </ThemedView>
   );
@@ -190,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   recentList: {
-    borderRadius: Spacing.three,
+    borderRadius: Radius.control,
     overflow: 'hidden',
   },
   addBar: {
@@ -199,26 +174,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
   },
-  primaryButton: {
+  mainAction: {
     flex: 1,
   },
-  secondaryButton: {
-    paddingHorizontal: Spacing.three,
-  },
-  addButton: {
-    minHeight: 52,
-    borderRadius: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    fontWeight: 600,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
   errorText: {
-    color: '#C0392B',
     textAlign: 'center',
   },
 });

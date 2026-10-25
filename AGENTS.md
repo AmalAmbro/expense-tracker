@@ -39,3 +39,29 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## UI conventions
+
+These are enforced by `npx expo lint` where possible; follow the rest by hand.
+
+**Buttons** — always use the shared components in `src/components/ui/`:
+
+- `Button` for actions, with a `variant`:
+  - `primary` (black/white fill): the screen's main action. **At most one per screen.**
+  - `secondary` (grey fill): alternative actions ("Scan QR code", "Back to edit").
+  - `destructive` (red text): deletes or fails something. Keep it visually apart from the main action.
+  - Pass `loading` while an action runs (shows a spinner and blocks presses) instead of changing the title. Use sentence-case titles.
+- `TextButton` for small inline actions and escape routes ("See all", "Clear", "Cancel", "← Back", "… instead"). `variant="destructive"` for removals ("Remove").
+- Never use `Button`, `TouchableOpacity`, or `TouchableHighlight` from `react-native` (lint error). Don't hand-build a button from `Pressable` + text; extend `Button`/`TextButton` instead.
+- Selection controls are not buttons and may use `Pressable` (chips, UPI app tiles, list rows, picker fields, month arrows) — but they must use the shared tokens below.
+
+**Text boxes** — always `ThemedTextInput` (`src/components/ui/themed-text-input.tsx`): a filled box with the shared radius, height, and padding. Use `size="large"` for prominent amount fields; `multiline` boxes grow and start at the top. Pass `style` for layout only (e.g. a taller `minHeight`). Importing `TextInput` from `react-native` elsewhere is a lint error.
+
+**Tokens** — from `src/constants/theme.ts`, never literal values:
+
+- Colours: `useTheme()` → `primary`, `onPrimary`, `link`, `danger`, `border`, `text`, `textSecondary`, `background*`. Every colour needs light and dark values. Hex/`rgba()` literals outside `theme.ts` are a lint error; add a token instead. (`CameraOverlay` is the fixed set for UI drawn over the camera.)
+- Shape: `Radius.control` for every button, input, picker field, chip, tile, and card.
+- Size: `ControlSize.height` (48) for buttons/inputs/fields, `ControlSize.compactHeight` (44) for text buttons/chips, `ControlSize.paddingHorizontal` for their side padding.
+- Error text: `<ThemedText themeColor="danger">`.
+
+Check new or changed screens on a device in **both light and dark mode** before calling UI work done.

@@ -1,8 +1,9 @@
 import * as Crypto from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Button, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedTextInput } from '@/components/ui/themed-text-input';
 import { ThemedView } from '@/components/ui/themed-view';
@@ -27,7 +28,6 @@ import {
   type UpiPaymentFormValues,
 } from '@/features/upi/utils/upi-payment-form';
 import { parseUpiQr, type ScannedUpiQr } from '@/features/upi/utils/upi-qr';
-import { useTheme } from '@/hooks/use-theme';
 import { todayISODate } from '@/utils/date';
 import { formatPaise, formatPaiseForInput, parseAmountToPaise } from '@/utils/money';
 import type { ExpenseItem } from '@/types/expense';
@@ -36,7 +36,6 @@ import type { Payment, PaymentStatus } from '@/types/payment';
 type Launched = { payment: Payment; items: ExpenseItem[]; appResponse: UpiAppResponse | null };
 
 export default function PayScreen() {
-  const theme = useTheme();
   const paymentRepository = usePaymentRepository();
   const { categories, paymentMethods, isLoading } = useExpenseOptions();
   const { awaiting, reload } = useAwaitingPayments();
@@ -234,8 +233,6 @@ export default function PayScreen() {
   } catch {
     // Not a valid amount yet; the button just says "Pay".
   }
-  const inputStyle = [styles.input, { backgroundColor: theme.backgroundElement }];
-
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -278,7 +275,11 @@ export default function PayScreen() {
               <ScannedPayeeCard qr={scanned} onClear={clearScan} />
             ) : (
               <>
-                <Button title="Scan QR code" onPress={() => router.push('/scan')} />
+                <Button
+                  title="Scan QR code"
+                  variant="secondary"
+                  onPress={() => router.push('/scan')}
+                />
                 <Field label="Pay to (UPI ID)" error={errors.payeeVpa}>
                   <ThemedTextInput
                     value={values.payeeVpa}
@@ -288,7 +289,6 @@ export default function PayScreen() {
                     autoCorrect={false}
                     keyboardType="email-address"
                     accessibilityLabel="Payee UPI ID"
-                    style={inputStyle}
                   />
                   <ThemedText type="small" themeColor="textSecondary">
                     Works with shop and business UPI IDs. UPI apps may refuse payments to personal
@@ -302,7 +302,6 @@ export default function PayScreen() {
                     onChangeText={(payeeName) => update({ payeeName })}
                     placeholder="Corner Bakery"
                     accessibilityLabel="Payee name"
-                    style={inputStyle}
                   />
                 </Field>
               </>
@@ -315,7 +314,7 @@ export default function PayScreen() {
                 placeholder="0"
                 keyboardType="decimal-pad"
                 accessibilityLabel="Amount in rupees"
-                style={[inputStyle, styles.amount]}
+                size="large"
               />
             </Field>
             <Field label="What for" error={errors.description}>
@@ -325,7 +324,6 @@ export default function PayScreen() {
                 onBlur={suggestCategory}
                 placeholder="Bread"
                 accessibilityLabel="What the payment is for"
-                style={inputStyle}
               />
             </Field>
             <Field label="Category" error={errors.categoryId}>
@@ -346,7 +344,7 @@ export default function PayScreen() {
               />
             </Field>
 
-            <Button title={`Pay${amountLabel}`} onPress={pay} disabled={isBusy} />
+            <Button title={`Pay${amountLabel}`} onPress={pay} loading={isBusy} />
             <ThemedText type="small" themeColor="textSecondary">
               Opens your UPI app to make the payment. Nothing is charged by this app; it only
               records the payment once you confirm it went through.
@@ -364,7 +362,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       <ThemedText type="small">{label}</ThemedText>
       {children}
       {error ? (
-        <ThemedText type="small" style={styles.errorText}>
+        <ThemedText type="small" themeColor="danger">
           {error}
         </ThemedText>
       ) : null}
@@ -386,17 +384,5 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: Spacing.one,
-  },
-  input: {
-    fontSize: 16,
-    minHeight: 44,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.two,
-  },
-  amount: {
-    fontSize: 24,
-  },
-  errorText: {
-    color: '#C0392B',
   },
 });

@@ -2,12 +2,14 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Button, Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/ui/button';
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
-import { Spacing } from '@/constants/theme';
+import { CameraOverlay, Spacing } from '@/constants/theme';
 import { parseUpiQr } from '@/features/upi/utils/upi-qr';
 
 const FRAME_SIZE = 240;
@@ -56,7 +58,7 @@ export default function ScanScreen() {
             <Button title="Open Settings" onPress={() => Linking.openSettings()} />
           </>
         )}
-        <Button title="Enter UPI ID instead" onPress={() => router.back()} />
+        <TextButton title="Enter UPI ID instead" onPress={() => router.back()} />
       </ThemedView>
     );
   }
@@ -77,24 +79,14 @@ export default function ScanScreen() {
             {error ?? 'Point the camera at a UPI QR code'}
           </ThemedText>
           <View style={styles.actions}>
-            <Pressable
-              onPress={() => setTorchOn((on) => !on)}
+            <TextButton
+              title={torchOn ? 'Torch off' : 'Torch on'}
               accessibilityRole="switch"
               accessibilityState={{ checked: torchOn }}
               accessibilityLabel="Torch"
-              style={styles.action}
-            >
-              <ThemedText style={styles.overlayText}>
-                {torchOn ? 'Torch off' : 'Torch on'}
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => router.back()}
-              accessibilityRole="button"
-              style={styles.action}
-            >
-              <ThemedText style={styles.overlayText}>Enter UPI ID instead</ThemedText>
-            </Pressable>
+              onPress={() => setTorchOn((on) => !on)}
+            />
+            <TextButton title="Enter UPI ID instead" onPress={() => router.back()} />
           </View>
         </View>
       </SafeAreaView>
@@ -117,7 +109,7 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: CameraOverlay.background,
   },
   overlay: {
     flex: 1,
@@ -129,26 +121,21 @@ const styles = StyleSheet.create({
     width: FRAME_SIZE,
     height: FRAME_SIZE,
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: CameraOverlay.frame,
     borderRadius: Spacing.three,
   },
   panel: {
     alignSelf: 'stretch',
     gap: Spacing.three,
     padding: Spacing.four,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: CameraOverlay.scrim,
   },
   overlayText: {
-    color: '#fff',
+    color: CameraOverlay.text,
     textAlign: 'center',
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  action: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.two,
   },
 });
