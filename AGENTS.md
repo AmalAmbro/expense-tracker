@@ -59,7 +59,9 @@ These are enforced by `npx expo lint` where possible; follow the rest by hand.
 
 **Tokens** — from `src/constants/theme.ts`, never literal values:
 
-- Colours: `useTheme()` → `primary`, `onPrimary`, `link`, `danger`, `border`, `text`, `textSecondary`, `background*`. Every colour needs light and dark values. Hex/`rgba()` literals outside `theme.ts` are a lint error; add a token instead. (`CameraOverlay` is the fixed set for UI drawn over the camera.)
+- Colours: `useTheme()` → `primary`, `onPrimary`, `link`, `danger`, `border`, `text`, `textSecondary`, `background*`, `accent`. Every colour needs light and dark values. Hex/`rgba()` literals outside `theme.ts` are a lint error; add a token instead. (`CameraOverlay` is the fixed set for UI drawn over the camera.)
+- Palette: taken from the app icon — deep forest green (`#041E1C`/`#0B3E37`) and the wallet's mint-to-teal (`#4AE599`/`#159A76`). Light mode: mint-white background, dark-green primary button. Dark mode: forest-green background, mint primary button with dark text. Use `accent` for charts and progress bars, never for text. New colours must stay in this family and meet WCAG AA (4.5:1 for text, 3:1 for graphics) in both modes.
+- Navigation (headers, drawer) uses `NavigationThemes` from `theme.ts`. The splash background in `app.json` must equal `background` (light and dark), and `splash-light.png`/`splash-dark.png` (logo plus app name) use the `text` colour.
 - Shape: `Radius.control` for every button, input, picker field, chip, tile, and card.
 - Size: `ControlSize.height` (48) for buttons/inputs/fields, `ControlSize.compactHeight` (44) for text buttons/chips, `ControlSize.paddingHorizontal` for their side padding.
 - Error text: `<ThemedText themeColor="danger">`.

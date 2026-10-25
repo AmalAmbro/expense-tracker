@@ -51,10 +51,7 @@ export function CategoryTotals({
             </View>
             <ThemedView type="backgroundElement" style={styles.track}>
               <View
-                style={[
-                  styles.bar,
-                  { width: `${share * 100}%`, backgroundColor: theme.textSecondary },
-                ]}
+                style={[styles.bar, { width: `${share * 100}%`, backgroundColor: theme.accent }]}
               />
             </ThemedView>
           </View>

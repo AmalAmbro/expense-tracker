@@ -14,14 +14,14 @@ export function EssentialSplit({ split }: { split: EssentialSplitData }) {
   const essentialShare = total > 0 ? split.essential / total : 0;
 
   const rows = [
-    { label: 'Essential', amount: split.essential, color: theme.text },
+    { label: 'Essential', amount: split.essential, color: theme.accent },
     { label: 'Discretionary', amount: split.discretionary, color: theme.textSecondary },
   ];
 
   return (
     <View style={styles.container}>
       <ThemedView type="backgroundElement" style={styles.track}>
-        <View style={[styles.segment, { flex: essentialShare, backgroundColor: theme.text }]} />
+        <View style={[styles.segment, { flex: essentialShare, backgroundColor: theme.accent }]} />
         <View
           style={[
             styles.segment,

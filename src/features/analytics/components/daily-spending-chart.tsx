@@ -47,7 +47,7 @@ export function DailySpendingChart({ days }: { days: DailyTotal[] }) {
                   styles.bar,
                   {
                     height,
-                    backgroundColor: isSelected ? theme.text : theme.textSecondary,
+                    backgroundColor: isSelected ? theme.text : theme.accent,
                   },
                 ]}
               />

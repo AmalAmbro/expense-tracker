@@ -1,45 +1,84 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens: colours (light and dark), fonts, spacing, and control shape and size.
+ * Use these instead of literal values (see AGENTS.md "UI conventions").
  */
 
 import '@/global.css';
 
+import { DarkTheme, DefaultTheme, type Theme } from 'expo-router';
 import { Platform } from 'react-native';
 
 export const Colors = {
+  // Brand palette, taken from the app icon: deep forest green (the icon's square) and the
+  // mint-to-teal gradient of its wallet. Every text pairing meets WCAG AA (4.5:1);
+  // `accent` meets the 3:1 minimum for graphics.
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    /** Primary button fill, and the label colour on it. */
-    primary: '#000000',
-    onPrimary: '#ffffff',
+    /** Deep forest green, near black. */
+    text: '#0B2B27',
+    /** Mint-tinted white. */
+    background: '#F5F9F7',
+    /** Cards, inputs, secondary buttons, unselected chips. */
+    backgroundElement: '#E5EFEB',
+    /** Selected chips and tiles, pressed text buttons, chart tracks. */
+    backgroundSelected: '#D0E4DC',
+    textSecondary: '#4A625D',
+    /** Primary button fill (the icon's dark green), and the label colour on it. */
+    primary: '#0B3E37',
+    onPrimary: '#FFFFFF',
     /** Text buttons and links. */
-    link: '#3c87f7',
+    link: '#0A7059',
     /** Destructive actions and error text. */
-    danger: '#C0392B',
+    danger: '#B3261E',
     /** Hairline separators and outlines. */
-    border: '#cccccc',
+    border: '#C5D8D1',
+    /** Charts and progress bars (the wallet's teal). */
+    accent: '#159A76',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    primary: '#ffffff',
-    onPrimary: '#000000',
-    link: '#3c87f7',
-    /** Lighter than the light-mode red so it stays readable on black. */
-    danger: '#FF6B5E',
-    border: '#3A3D42',
+    text: '#E6F4EE',
+    /** The icon's deep forest green. */
+    background: '#041E1C',
+    backgroundElement: '#0B2E2A',
+    backgroundSelected: '#134039',
+    textSecondary: '#9CB8B0',
+    /** The wallet's mint, with dark text on it. */
+    primary: '#4AE599',
+    onPrimary: '#04201D',
+    link: '#6EE7AC',
+    /** Lighter than the light-mode red so it stays readable on dark green. */
+    danger: '#FF7B6E',
+    border: '#1E413B',
+    accent: '#4AE599',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+/** React Navigation themes (headers, drawer, screen backgrounds) built from the palette. */
+export const NavigationThemes: Record<'light' | 'dark', Theme> = {
+  light: {
+    ...DefaultTheme,
+    colors: {
+      primary: Colors.light.link,
+      background: Colors.light.background,
+      card: Colors.light.background,
+      text: Colors.light.text,
+      border: Colors.light.border,
+      notification: Colors.light.danger,
+    },
+  },
+  dark: {
+    ...DarkTheme,
+    colors: {
+      primary: Colors.dark.link,
+      background: Colors.dark.background,
+      card: Colors.dark.background,
+      text: Colors.dark.text,
+      border: Colors.dark.border,
+      notification: Colors.dark.danger,
+    },
+  },
+};
 
 /**
  * Colours for UI drawn over the live camera image. Fixed in both light and dark mode,
