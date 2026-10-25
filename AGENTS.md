@@ -55,6 +55,8 @@ These are enforced by `npx expo lint` where possible; follow the rest by hand.
 - Never use `Button`, `TouchableOpacity`, or `TouchableHighlight` from `react-native` (lint error). Don't hand-build a button from `Pressable` + text; extend `Button`/`TextButton` instead.
 - Selection controls are not buttons and may use `Pressable` (chips, UPI app tiles, list rows, picker fields, month arrows) — but they must use the shared tokens below.
 
+**Feedback** — show the outcome of an action where it was taken with `Notice` (`src/components/ui/notice.tsx`, `success` or `error`, a short title plus a detail line). For actions that finish off-screen or behind a system sheet (backups, exports), also call `showToast` (`src/utils/show-toast.ts`, Android only). Don't leave an action finishing silently.
+
 **Text boxes** — always `ThemedTextInput` (`src/components/ui/themed-text-input.tsx`): a filled box with the shared radius, height, and padding. Use `size="large"` for prominent amount fields; `multiline` boxes grow and start at the top. Pass `style` for layout only (e.g. a taller `minHeight`). Importing `TextInput` from `react-native` elsewhere is a lint error.
 
 **Tokens** — from `src/constants/theme.ts`, never literal values:

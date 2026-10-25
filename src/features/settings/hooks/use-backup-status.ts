@@ -2,25 +2,33 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { useExpenseRepository } from '@/database/hooks';
-import { getLastBackupAt } from '@/features/settings/services/backup-status';
+import { getBackupStatus, type BackupStatus } from '@/features/settings/services/backup-status';
 import { getBackupReminder } from '@/features/settings/utils/backup-reminder';
 
+const NO_STATUS: BackupStatus = {
+  lastBackupAt: null,
+  lastBackupLocation: null,
+  backupFolderUri: null,
+};
+
 /**
- * When the user last backed up, and the reminder to show (if one is due). Reloads when
- * the screen regains focus, e.g. after backing up in Settings.
+ * The last backup, the backup folder, and the reminder to show (if one is due).
+ * Reloads when the screen regains focus, e.g. after backing up in Settings.
  */
 export function useBackupStatus() {
   const expenseRepository = useExpenseRepository();
-  const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
+  const [status, setStatus] = useState<BackupStatus>(NO_STATUS);
   const [reminder, setReminder] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     let isCurrent = true;
-    Promise.all([getLastBackupAt(), expenseRepository.countAll()])
-      .then(([last, expenseCount]) => {
+    Promise.all([getBackupStatus(), expenseRepository.countAll()])
+      .then(([next, expenseCount]) => {
         if (!isCurrent) return;
-        setLastBackupAt(last);
-        setReminder(getBackupReminder({ lastBackupAt: last, expenseCount, now: new Date() }));
+        setStatus(next);
+        setReminder(
+          getBackupReminder({ lastBackupAt: next.lastBackupAt, expenseCount, now: new Date() }),
+        );
       })
       // A reminder is a nicety; if it can't be worked out, show none rather than an error.
       .catch(() => {});
@@ -31,5 +39,5 @@ export function useBackupStatus() {
 
   useFocusEffect(reload);
 
-  return { lastBackupAt, reminder, reload };
+  return { ...status, reminder, reload };
 }

@@ -46,4 +46,10 @@ describe('describeLastBackup', () => {
   it('shows the date and time of the last backup', () => {
     expect(describeLastBackup('2026-10-25T15:16:00.000Z')).toMatch(/^Last backup: 25 Oct 2026, /);
   });
+
+  it('adds where the backup was saved, when known', () => {
+    expect(describeLastBackup('2026-10-25T15:16:00.000Z', 'Phone storage › Download')).toMatch(
+      /^Last backup: 25 Oct 2026, .* · saved to Phone storage › Download$/,
+    );
+  });
 });

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
+import { Notice } from '@/components/ui/notice';
+import { TextButton } from '@/components/ui/text-button';
 import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -13,19 +15,26 @@ import {
   useRestoreBackup,
   type RestorePreview,
 } from '@/features/settings/hooks/use-restore-backup';
+import { isFolderBackupSupported } from '@/features/settings/services/backup-folder';
+import { describeBackupFolder } from '@/features/settings/utils/backup-folder-label';
 import { describeLastBackup } from '@/features/settings/utils/backup-reminder';
 import { formatPaise } from '@/utils/money';
+import { showToast } from '@/utils/show-toast';
 
 type ActionStatus =
   | { state: 'idle' }
   | { state: 'working' }
-  | { state: 'done'; message: string }
-  | { state: 'error'; message: string };
+  | { state: 'done'; title: string; message: string }
+  | { state: 'error'; title: string; message: string };
 
 const IDLE: ActionStatus = { state: 'idle' };
 
-function errorStatus(err: unknown, fallback: string): ActionStatus {
-  return { state: 'error', message: err instanceof Error ? err.message : fallback };
+function errorStatus(title: string, err: unknown): ActionStatus {
+  return {
+    state: 'error',
+    title,
+    message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+  };
 }
 
 /** e.g. "312 expenses, ₹45,000.00". */
@@ -33,22 +42,15 @@ function describeExpenses(count: number, total: number): string {
   return `${count} ${count === 1 ? 'expense' : 'expenses'}, ${formatPaise(total)}`;
 }
 
-function StatusMessage({ status }: { status: ActionStatus }) {
-  if (status.state === 'done') {
-    return (
-      <ThemedText type="small" accessibilityLiveRegion="polite">
-        {status.message}
-      </ThemedText>
-    );
-  }
-  if (status.state === 'error') {
-    return (
-      <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
-        {status.message}
-      </ThemedText>
-    );
-  }
-  return null;
+function StatusNotice({ status }: { status: ActionStatus }) {
+  if (status.state !== 'done' && status.state !== 'error') return null;
+  return (
+    <Notice
+      variant={status.state === 'done' ? 'success' : 'error'}
+      title={status.title}
+      message={status.message}
+    />
+  );
 }
 
 export default function SettingsScreen() {
@@ -62,17 +64,38 @@ export default function SettingsScreen() {
   const [preview, setPreview] = useState<RestorePreview | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
-  async function handleBackup() {
+  /** folder: save to the backup folder (choosing one if needed); choose: pick a new folder first. */
+  async function handleBackup(how: 'folder' | 'choose' | 'share') {
     setBackupActionStatus({ state: 'working' });
     try {
-      const { summary } = await createBackup();
-      setBackupActionStatus({
-        state: 'done',
-        message: `Backup created: ${describeExpenses(summary.expenseItemCount, summary.expenseItemTotal)} in total.`,
-      });
-      backupStatus.reload();
+      const result =
+        how === 'share'
+          ? await createBackup.share()
+          : await createBackup.saveToFolder({ chooseFolder: how === 'choose' });
+      if (!result) {
+        setBackupActionStatus(IDLE);
+        return;
+      }
+      const { summary } = result.backup;
+      const contents = describeExpenses(summary.expenseItemCount, summary.expenseItemTotal);
+      if (result.savedTo) {
+        showToast(`Backup saved to ${result.savedTo}`);
+        setBackupActionStatus({
+          state: 'done',
+          title: 'Backup saved',
+          message: `${contents}, saved to ${result.savedTo}.`,
+        });
+      } else {
+        setBackupActionStatus({
+          state: 'done',
+          title: 'Backup created',
+          message: `${contents}. It went wherever you chose in the share sheet.`,
+        });
+      }
     } catch (err) {
-      setBackupActionStatus(errorStatus(err, 'Failed to create backup'));
+      setBackupActionStatus(errorStatus('Backup not saved', err));
+    } finally {
+      backupStatus.reload();
     }
   }
 
@@ -80,9 +103,14 @@ export default function SettingsScreen() {
     setCsvStatus({ state: 'working' });
     try {
       const { count, total } = await exportCsv();
-      setCsvStatus({ state: 'done', message: `Exported ${describeExpenses(count, total)}.` });
+      showToast('Expenses exported');
+      setCsvStatus({
+        state: 'done',
+        title: 'Expenses exported',
+        message: `${describeExpenses(count, total)}, as a CSV file.`,
+      });
     } catch (err) {
-      setCsvStatus(errorStatus(err, 'Failed to export expenses'));
+      setCsvStatus(errorStatus('Export failed', err));
     }
   }
 
@@ -94,7 +122,7 @@ export default function SettingsScreen() {
       setPreview(picked);
       setRestoreStatus(IDLE);
     } catch (err) {
-      setRestoreStatus(errorStatus(err, 'Couldn’t read that backup file'));
+      setRestoreStatus(errorStatus('Couldn’t use that file', err));
     }
   }
 
@@ -105,15 +133,17 @@ export default function SettingsScreen() {
       await restore(preview.backup);
       const { spendingCount, spendingTotal } = preview.incoming;
       setPreview(null);
+      showToast('Backup restored');
       setRestoreStatus({
         state: 'done',
-        message: `Restored ${describeExpenses(spendingCount, spendingTotal)}.`,
+        title: 'Backup restored',
+        message: `${describeExpenses(spendingCount, spendingTotal)} are now in the app.`,
       });
     } catch (err) {
       setRestoreStatus({
         state: 'error',
-        message:
-          `Restore failed, nothing was changed. ${err instanceof Error ? err.message : ''}`.trim(),
+        title: 'Restore failed — nothing was changed',
+        message: err instanceof Error ? err.message : 'Your existing data is untouched.',
       });
     } finally {
       setIsRestoring(false);
@@ -128,18 +158,46 @@ export default function SettingsScreen() {
             Back up
           </ThemedText>
           <ThemedText themeColor="textSecondary">
-            Save all expenses, categories, and payment methods to a JSON file. You choose where it
-            goes — Files, Google Drive, email — the app doesn’t upload it anywhere.
+            {isFolderBackupSupported
+              ? 'Save all expenses, categories, and payment methods to a JSON file in a folder you choose — on this phone or in Google Drive. The app doesn’t upload it anywhere.'
+              : 'Save all expenses, categories, and payment methods to a JSON file. You choose where it goes — Files, Google Drive, email — the app doesn’t upload it anywhere.'}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {describeLastBackup(backupStatus.lastBackupAt)}
+            {describeLastBackup(backupStatus.lastBackupAt, backupStatus.lastBackupLocation)}
           </ThemedText>
+          {isFolderBackupSupported && backupStatus.backupFolderUri ? (
+            <View style={styles.folderRow}>
+              <ThemedText type="small" style={styles.folderLabel}>
+                Backup folder: {describeBackupFolder(backupStatus.backupFolderUri)}
+              </ThemedText>
+              <TextButton
+                title="Change"
+                accessibilityLabel="Change backup folder"
+                onPress={() => handleBackup('choose')}
+                disabled={backupActionStatus.state === 'working'}
+              />
+            </View>
+          ) : null}
           <Button
-            title="Back up data (JSON)"
-            onPress={handleBackup}
+            title={
+              !isFolderBackupSupported
+                ? 'Back up data (JSON)'
+                : backupStatus.backupFolderUri
+                  ? 'Back up now'
+                  : 'Choose folder and back up'
+            }
+            onPress={() => handleBackup(isFolderBackupSupported ? 'folder' : 'share')}
             loading={backupActionStatus.state === 'working'}
           />
-          <StatusMessage status={backupActionStatus} />
+          {isFolderBackupSupported ? (
+            <TextButton
+              title="Share a copy instead"
+              onPress={() => handleBackup('share')}
+              disabled={backupActionStatus.state === 'working'}
+              style={styles.alignStart}
+            />
+          ) : null}
+          <StatusNotice status={backupActionStatus} />
         </View>
 
         <View style={styles.section}>
@@ -157,7 +215,7 @@ export default function SettingsScreen() {
             onPress={handleExportCsv}
             loading={csvStatus.state === 'working'}
           />
-          <StatusMessage status={csvStatus} />
+          <StatusNotice status={csvStatus} />
         </View>
 
         <View style={styles.section}>
@@ -183,7 +241,7 @@ export default function SettingsScreen() {
               loading={restoreStatus.state === 'working'}
             />
           )}
-          <StatusMessage status={restoreStatus} />
+          <StatusNotice status={restoreStatus} />
         </View>
       </ScrollView>
     </ThemedView>
@@ -200,5 +258,16 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.three,
+  },
+  folderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  folderLabel: {
+    flex: 1,
+  },
+  alignStart: {
+    alignSelf: 'flex-start',
   },
 });

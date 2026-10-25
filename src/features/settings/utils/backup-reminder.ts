@@ -37,11 +37,17 @@ export function getBackupReminder(options: {
     : null;
 }
 
-/** e.g. "Last backup: 25 Oct 2026, 8:46 pm", or "Not backed up yet". */
-export function describeLastBackup(lastBackupAt: string | null): string {
+/**
+ * e.g. "Last backup: 25 Oct 2026, 8:46 pm · saved to Phone storage › Download", or
+ * "Not backed up yet". Without a location (shared via the share sheet), only the time.
+ */
+export function describeLastBackup(
+  lastBackupAt: string | null,
+  location: string | null = null,
+): string {
   if (lastBackupAt === null) return 'Not backed up yet';
   const date = new Date(lastBackupAt);
-  return Number.isNaN(date.getTime())
-    ? 'Not backed up yet'
-    : `Last backup: ${lastBackupFormatter.format(date)}`;
+  if (Number.isNaN(date.getTime())) return 'Not backed up yet';
+  const when = `Last backup: ${lastBackupFormatter.format(date)}`;
+  return location ? `${when} · saved to ${location}` : when;
 }

@@ -135,6 +135,11 @@ file picker; the app never uploads anything.
   checksum summary (counts and paise totals). `parseBackup` reads v1 and v2 files
   and checks structure, totals, and that every link (payment, category, parent
   category, payment method) points at a record in the same file.
+- **Backup folder** (Android): the first backup asks for a folder with the system
+  folder picker (phone storage or Google Drive); the app keeps access to it, writes
+  each backup there directly, reads it back to confirm it was saved, and shows the
+  folder and last backup time in Settings. "Share a copy instead" still uses the
+  share sheet. Home reminds the user when the last backup is 30+ days old.
 - **Restore** (`src/features/settings/services/restore-backup.ts`): shows what
   the file holds and what it will replace, then, once confirmed, replaces all
   data in one transaction and re-checks counts and totals before committing; any
