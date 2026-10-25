@@ -15,6 +15,10 @@ export default function RootLayout() {
             options={{ presentation: 'modal', title: 'Add Expense' }}
           />
           <Stack.Screen
+            name="scan"
+            options={{ presentation: 'fullScreenModal', title: 'Scan UPI QR' }}
+          />
+          <Stack.Screen
             name="expense/[id]"
             options={{ presentation: 'modal', title: 'Edit Expense' }}
           />

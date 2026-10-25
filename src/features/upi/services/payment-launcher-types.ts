@@ -1,5 +1,9 @@
 import type { UpiProvider } from '@/features/upi/providers';
 import type { UpiAppResponse, UpiPaymentRequest } from '@/features/upi/utils/upi-link';
+import type { ScannedUpiQr } from '@/features/upi/utils/upi-qr';
+
+/** A payment to launch; when it came from a QR code, the QR's own link is used. */
+export type UpiLaunchRequest = UpiPaymentRequest & { qr?: ScannedUpiQr | null };
 
 /**
  * - returned: the UPI app was opened and the user came back. `response` is what the
@@ -22,5 +26,5 @@ export type PaymentLauncher = {
    * known list, since iOS can't be asked (installation is checked at launch).
    */
   getAvailableProviders(): Promise<UpiProvider[]>;
-  launchUPIPayment(request: UpiPaymentRequest, provider: UpiProvider): Promise<UpiLaunchResult>;
+  launchUPIPayment(request: UpiLaunchRequest, provider: UpiProvider): Promise<UpiLaunchResult>;
 };

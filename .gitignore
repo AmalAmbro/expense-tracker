@@ -45,5 +45,6 @@ example
 # local planning doc
 /plan.md
 
-# Native build output of local Expo modules
+# Native build output and Gradle caches of local Expo modules
 /modules/*/android/build
+/modules/*/android/.gradle

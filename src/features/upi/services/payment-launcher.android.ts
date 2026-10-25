@@ -2,7 +2,8 @@ import { UpiIntent } from '../../../../modules/upi-intent';
 
 import { providerIdForPackage } from '@/features/upi/providers';
 import type { PaymentLauncher } from '@/features/upi/services/payment-launcher-types';
-import { buildUpiPaymentLink, parseUpiResponse } from '@/features/upi/utils/upi-link';
+import { parseUpiResponse } from '@/features/upi/utils/upi-link';
+import { buildLaunchLink } from '@/features/upi/utils/upi-qr';
 
 /**
  * Android: lists the UPI apps actually installed and opens the chosen one directly
@@ -28,7 +29,7 @@ export const paymentLauncher: PaymentLauncher = {
 
     let result;
     try {
-      result = await UpiIntent.startPayment(buildUpiPaymentLink(request), provider.androidPackage);
+      result = await UpiIntent.startPayment(buildLaunchLink(request), provider.androidPackage);
     } catch (err) {
       if ((err as { code?: string }).code === 'E_UPI_APP_NOT_FOUND') {
         return { outcome: 'not-installed' };

@@ -142,6 +142,19 @@ export default function HomeScreen() {
         >
           <ThemedText style={styles.addButtonText}>Bulk</ThemedText>
         </Pressable>
+        <Pressable
+          onPress={() => router.push('/scan')}
+          accessibilityRole="button"
+          accessibilityLabel="Scan a UPI QR code to pay"
+          style={({ pressed }) => [
+            styles.addButton,
+            styles.secondaryButton,
+            { backgroundColor: theme.backgroundElement },
+            pressed && styles.pressed,
+          ]}
+        >
+          <ThemedText style={styles.addButtonText}>Scan</ThemedText>
+        </Pressable>
       </View>
     </ThemedView>
   );
@@ -190,7 +203,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   secondaryButton: {
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.three,
   },
   addButton: {
     minHeight: 52,

@@ -2,7 +2,7 @@ import * as Linking from 'expo-linking';
 
 import { UPI_PROVIDERS } from '@/features/upi/providers';
 import type { PaymentLauncher } from '@/features/upi/services/payment-launcher-types';
-import { buildUpiPaymentLink } from '@/features/upi/utils/upi-link';
+import { buildLaunchLink } from '@/features/upi/utils/upi-qr';
 
 /**
  * iOS: opens the chosen app through its URL scheme. iOS has no app chooser and apps
@@ -15,7 +15,7 @@ export const paymentLauncher: PaymentLauncher = {
   async launchUPIPayment(request, provider) {
     if (!provider.iosLinkBase) return { outcome: 'unsupported' };
     try {
-      await Linking.openURL(buildUpiPaymentLink(request, provider.iosLinkBase));
+      await Linking.openURL(buildLaunchLink(request, provider.iosLinkBase));
     } catch {
       // openURL rejects when no installed app handles the scheme.
       return { outcome: 'not-installed' };

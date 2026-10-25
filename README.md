@@ -18,7 +18,8 @@ can back up all data to a JSON file via the system share sheet. Milestone 7
 split expenses into payments and expense items (see *Data model*). Milestone 8
 added **Pay (UPI)**: it opens a UPI app to pay (it never processes payments
 itself), records the payment as `initiated`, and counts it as spending only once
-the user confirms it went through.
+the user confirms it went through. Milestone 9 added a **UPI QR scanner** (Home →
+Scan, or Pay → Scan QR code).
 
 ## Stack
 
@@ -112,6 +113,12 @@ Amounts are always integer paise (₹1 = 100).
   ("limit exceeded", regardless of link format) but accepts business UPI IDs.
   Links for typed-in UPI IDs omit `tr`, which apps expect only alongside
   merchant details (`mc`).
+- Scanned QR codes (`src/features/upi/utils/upi-qr.ts`) are launched with the
+  merchant's own parameters (`mc`, `tr`, `mode`, `sign`, …) passed through
+  verbatim; only a missing amount (and currency) is added, and a fixed amount
+  is never changed. Only `upi://pay` QRs are supported; Bharat QR (EMV) codes
+  are rejected with a message. The camera permission is requested without the
+  microphone.
 - Because of `modules/upi-intent` (and other native modules), the app runs as a
   development build, not Expo Go. After native changes, rebuild with
   `npx expo prebuild --clean --platform android && npx expo run:android`.

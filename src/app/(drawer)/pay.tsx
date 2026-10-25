@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -11,6 +12,7 @@ import { createCategoryMatcher } from '@/features/bulk-entry/utils/match-categor
 import { CategoryField } from '@/features/expenses/components/category-field';
 import { useExpenseOptions } from '@/features/expenses/hooks/use-expense-options';
 import { PaymentOutcomeCard } from '@/features/upi/components/payment-outcome-card';
+import { ScannedPayeeCard } from '@/features/upi/components/scanned-payee-card';
 import { UpiAppPicker } from '@/features/upi/components/upi-app-picker';
 import { useAwaitingPayments } from '@/features/upi/hooks/use-awaiting-payments';
 import type { UpiProvider } from '@/features/upi/providers';
@@ -24,9 +26,10 @@ import {
   type UpiPaymentFormErrors,
   type UpiPaymentFormValues,
 } from '@/features/upi/utils/upi-payment-form';
+import { parseUpiQr, type ScannedUpiQr } from '@/features/upi/utils/upi-qr';
 import { useTheme } from '@/hooks/use-theme';
 import { todayISODate } from '@/utils/date';
-import { formatPaise, parseAmountToPaise } from '@/utils/money';
+import { formatPaise, formatPaiseForInput, parseAmountToPaise } from '@/utils/money';
 import type { ExpenseItem } from '@/types/expense';
 import type { Payment, PaymentStatus } from '@/types/payment';
 
@@ -39,6 +42,8 @@ export default function PayScreen() {
   const { awaiting, reload } = useAwaitingPayments();
   const matchCategory = useMemo(() => createCategoryMatcher(categories), [categories]);
   const upiMethod = findUpiPaymentMethod(paymentMethods);
+  /** Raw QR contents handed over by the scanner (see app/scan.tsx). */
+  const { qr: scannedData } = useLocalSearchParams<{ qr?: string }>();
 
   const [values, setValues] = useState<UpiPaymentFormValues>(EMPTY_UPI_PAYMENT_FORM);
   const [errors, setErrors] = useState<UpiPaymentFormErrors>({});
@@ -46,6 +51,8 @@ export default function PayScreen() {
   const [launched, setLaunched] = useState<Launched | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  /** The scanned QR being paid, if the payee came from a QR code. */
+  const [scanned, setScanned] = useState<ScannedUpiQr | null>(null);
   /** null while loading. On Android, the UPI apps installed on this phone. */
   const [providers, setProviders] = useState<UpiProvider[] | null>(null);
 
@@ -61,6 +68,40 @@ export default function PayScreen() {
       isCurrent = false;
     };
   }, []);
+
+  // Take over a QR handed in by the scanner. State is adjusted during render (React's
+  // pattern for responding to a changed prop); the effect only clears the route param
+  // so a later visit — or re-scanning the same QR — is handled afresh.
+  const [appliedScan, setAppliedScan] = useState<string | null>(null);
+  if (scannedData && scannedData !== appliedScan) {
+    setAppliedScan(scannedData);
+    const result = parseUpiQr(scannedData);
+    if (result.ok) {
+      const { qr } = result;
+      setScanned(qr);
+      setErrors({});
+      setMessage(null);
+      setValues((current) => ({
+        ...current,
+        payeeVpa: qr.payeeVpa,
+        payeeName: qr.payeeName ?? '',
+        amountText: qr.amount !== null ? formatPaiseForInput(qr.amount) : '',
+      }));
+    } else {
+      setMessage(result.error);
+    }
+  } else if (!scannedData && appliedScan !== null) {
+    setAppliedScan(null);
+  }
+
+  useEffect(() => {
+    if (scannedData) router.setParams({ qr: undefined });
+  }, [scannedData]);
+
+  function clearScan() {
+    setScanned(null);
+    setValues((current) => ({ ...current, payeeVpa: '', payeeName: '', amountText: '' }));
+  }
 
   function update(changes: Partial<UpiPaymentFormValues>) {
     setValues((current) => ({ ...current, ...changes }));
@@ -83,7 +124,11 @@ export default function PayScreen() {
     setIsBusy(true);
     let saved: { payment: Payment; items: ExpenseItem[] } | null = null;
     try {
-      const transactionReference = createTransactionReference(new Date(), Crypto.randomUUID());
+      // A merchant QR's own reference identifies the payment to the merchant; otherwise
+      // we generate one for our records.
+      const transactionReference =
+        scanned?.transactionReference ??
+        createTransactionReference(new Date(), Crypto.randomUUID());
       const records = toUpiPaymentRecords(values, {
         paymentMethodId: upiMethod.id,
         categories,
@@ -103,6 +148,8 @@ export default function PayScreen() {
           // A typed-in UPI ID has no merchant details, so no `tr` (see UpiPaymentRequest).
           // The reference stays on our payment record for our own bookkeeping.
           transactionReference: null,
+          // A scanned QR is launched with its own parameters (mc, tr, sign, …) intact.
+          qr: scanned,
         },
         provider,
       );
@@ -145,6 +192,7 @@ export default function PayScreen() {
       if (launched?.payment.id === payment.id) {
         setLaunched(null);
         setValues(EMPTY_UPI_PAYMENT_FORM);
+        setScanned(null);
         setCategoryChosenByUser(false);
       }
       setMessage(
@@ -226,36 +274,44 @@ export default function PayScreen() {
           </ThemedText>
         ) : (
           <View style={styles.section}>
-            <Field label="Pay to (UPI ID)" error={errors.payeeVpa}>
-              <ThemedTextInput
-                value={values.payeeVpa}
-                onChangeText={(payeeVpa) => update({ payeeVpa })}
-                placeholder="name@bank"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                accessibilityLabel="Payee UPI ID"
-                style={inputStyle}
-              />
-              <ThemedText type="small" themeColor="textSecondary">
-                Works with shop and business UPI IDs. UPI apps may refuse payments to personal UPI
-                IDs started from another app, often with a misleading “limit exceeded” error — your
-                bank limit isn’t the problem.
-              </ThemedText>
-            </Field>
-            <Field label="Payee name (optional)">
-              <ThemedTextInput
-                value={values.payeeName}
-                onChangeText={(payeeName) => update({ payeeName })}
-                placeholder="Corner Bakery"
-                accessibilityLabel="Payee name"
-                style={inputStyle}
-              />
-            </Field>
+            {scanned ? (
+              <ScannedPayeeCard qr={scanned} onClear={clearScan} />
+            ) : (
+              <>
+                <Button title="Scan QR code" onPress={() => router.push('/scan')} />
+                <Field label="Pay to (UPI ID)" error={errors.payeeVpa}>
+                  <ThemedTextInput
+                    value={values.payeeVpa}
+                    onChangeText={(payeeVpa) => update({ payeeVpa })}
+                    placeholder="name@bank"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    accessibilityLabel="Payee UPI ID"
+                    style={inputStyle}
+                  />
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Works with shop and business UPI IDs. UPI apps may refuse payments to personal
+                    UPI IDs started from another app, often with a misleading “limit exceeded” error
+                    — your bank limit isn’t the problem.
+                  </ThemedText>
+                </Field>
+                <Field label="Payee name (optional)">
+                  <ThemedTextInput
+                    value={values.payeeName}
+                    onChangeText={(payeeName) => update({ payeeName })}
+                    placeholder="Corner Bakery"
+                    accessibilityLabel="Payee name"
+                    style={inputStyle}
+                  />
+                </Field>
+              </>
+            )}
             <Field label="Amount" error={errors.amountText}>
               <ThemedTextInput
                 value={values.amountText}
                 onChangeText={(amountText) => update({ amountText })}
+                editable={!scanned?.amountIsFixed}
                 placeholder="0"
                 keyboardType="decimal-pad"
                 accessibilityLabel="Amount in rupees"
