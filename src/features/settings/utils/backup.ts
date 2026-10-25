@@ -164,6 +164,36 @@ export function serializeBackup(backup: Backup): string {
   return `${JSON.stringify(backup, null, 2)}\n`;
 }
 
+/** Every link between records must point at a record in the same file. */
+function checkReferences(
+  backup: Backup,
+  records: {
+    id: string;
+    paymentMethodId?: string;
+    categoryId?: string;
+    subcategoryId?: string | null;
+  }[],
+): void {
+  const categoryIds = new Set(backup.categories.map((c) => c.id));
+  const methodIds = new Set(backup.paymentMethods.map((m) => m.id));
+  for (const category of backup.categories) {
+    if (category.parentId !== null && !categoryIds.has(category.parentId)) {
+      throw new Error(`Category ${category.id} refers to a missing parent category`);
+    }
+  }
+  for (const record of records) {
+    if (record.paymentMethodId !== undefined && !methodIds.has(record.paymentMethodId)) {
+      throw new Error(`Record ${record.id} refers to a missing payment method`);
+    }
+    if (record.categoryId !== undefined && !categoryIds.has(record.categoryId)) {
+      throw new Error(`Record ${record.id} refers to a missing category`);
+    }
+    if (record.subcategoryId && !categoryIds.has(record.subcategoryId)) {
+      throw new Error(`Record ${record.id} refers to a missing subcategory`);
+    }
+  }
+}
+
 function checkV1(backup: BackupV1): void {
   const { summary } = backup;
   if (
@@ -176,6 +206,7 @@ function checkV1(backup: BackupV1): void {
   if (summary.totalAmount !== sumAmounts(backup.expenses)) {
     throw new Error('Backup total does not match its expenses');
   }
+  checkReferences(backup, backup.expenses);
 }
 
 function checkV2(backup: BackupV2): void {
@@ -194,6 +225,8 @@ function checkV2(backup: BackupV2): void {
   if (summary.expenseItemTotal !== sumAmounts(backup.expenseItems)) {
     throw new Error('Backup expense item total does not match its items');
   }
+
+  checkReferences(backup, [...backup.payments, ...backup.expenseItems]);
 
   const itemAmountsByPayment = new Map(backup.payments.map((p) => [p.id, [] as number[]]));
   for (const item of backup.expenseItems) {
@@ -239,10 +272,63 @@ export function parseBackup(json: string): Backup {
   return backup;
 }
 
+export type BackupSummary = {
+  version: Backup['version'];
+  exportedAt: string;
+  paymentCount: number;
+  expenseItemCount: number;
+  /** Items of confirmed payments only — what the app counts as spending, in paise. */
+  spendingCount: number;
+  spendingTotal: number;
+  categoryCount: number;
+  paymentMethodCount: number;
+  /** Earliest and latest expense item dates, or null when there are none. */
+  firstDate: string | null;
+  lastDate: string | null;
+};
+
+/** What a backup holds, for showing before a restore. Pure function. */
+export function summarizeBackup(backup: Backup): BackupSummary {
+  let paymentCount: number;
+  let items: { amount: number; date: string }[];
+  let spending: { amount: number }[];
+  if (backup.version === 1) {
+    // Each v1 expense becomes one confirmed payment with one item (as in the v1 → v2 migration).
+    paymentCount = backup.expenses.length;
+    items = backup.expenses;
+    spending = backup.expenses;
+  } else {
+    const confirmed = new Set(
+      backup.payments.filter((p) => p.status === 'confirmed').map((p) => p.id),
+    );
+    paymentCount = backup.payments.length;
+    items = backup.expenseItems;
+    spending = backup.expenseItems.filter((item) => confirmed.has(item.paymentId));
+  }
+  const dates = items.map((item) => item.date).sort();
+
+  return {
+    version: backup.version,
+    exportedAt: backup.exportedAt,
+    paymentCount,
+    expenseItemCount: items.length,
+    spendingCount: spending.length,
+    spendingTotal: sumAmounts(spending),
+    categoryCount: backup.categories.length,
+    paymentMethodCount: backup.paymentMethods.length,
+    firstDate: dates[0] ?? null,
+    lastDate: dates.at(-1) ?? null,
+  };
+}
+
+/** e.g. "2026-10-03-2214", in local time — for export file names. */
+export function fileTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return `${day}-${pad(date.getHours())}${pad(date.getMinutes())}`;
+}
+
 /** e.g. "expense-tracker-backup-2026-10-03-2214.json", in local time. */
 export function backupFileName(exportedAt: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const date = `${exportedAt.getFullYear()}-${pad(exportedAt.getMonth() + 1)}-${pad(exportedAt.getDate())}`;
-  const time = `${pad(exportedAt.getHours())}${pad(exportedAt.getMinutes())}`;
-  return `${BACKUP_FORMAT}-${date}-${time}.json`;
+  return `${BACKUP_FORMAT}-${fileTimestamp(exportedAt)}.json`;
 }

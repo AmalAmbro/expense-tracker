@@ -14,7 +14,8 @@ transactions, month navigation), and analytics (category breakdown, essential
 vs discretionary, daily spending, month-over-month comparison), and bulk entry
 (notes-style text such as `Chicken 200+90+90`, parsed deterministically,
 auto-categorised from an alias list, previewed, and saved atomically). Settings
-can back up all data to a JSON file via the system share sheet. Milestone 7
+can back up all data to a JSON file, export spending as a CSV (Milestone 13), and
+restore from a backup file (see *Backup, restore and export*). Milestone 7
 split expenses into payments and expense items (see *Data model*). Milestone 8
 added **Pay (UPI)**: it opens a UPI app to pay (it never processes payments
 itself), records the payment as `initiated`, and counts it as spending only once
@@ -124,6 +125,28 @@ Amounts are always integer paise (₹1 = 100).
   `npx expo prebuild --clean --platform android && npx expo run:android`.
 - Repository tests run against real SQLite through Node's built-in
   `node:sqlite` (Node 22.13+), via `src/test-utils/node-sqlite-database.ts`.
+
+## Backup, restore and export
+
+All three live in Settings and hand files over through the system share sheet or
+file picker; the app never uploads anything.
+
+- **Backup** (`src/features/settings/utils/backup.ts`): JSON, format v2, with a
+  checksum summary (counts and paise totals). `parseBackup` reads v1 and v2 files
+  and checks structure, totals, and that every link (payment, category, parent
+  category, payment method) points at a record in the same file.
+- **Restore** (`src/features/settings/services/restore-backup.ts`): shows what
+  the file holds and what it will replace, then, once confirmed, replaces all
+  data in one transaction and re-checks counts and totals before committing; any
+  failure rolls back to the untouched existing data. v1 files are loaded into a
+  temporary `expenses` table and converted by the v1 → v2 migration's own
+  `SCHEMA_V2_COPY_SQL`. The picker is expo-file-system's `File.pickFileAsync`
+  (no extra native module).
+- **CSV export** (`src/features/settings/utils/expenses-csv.ts`): one row per
+  expense item of a confirmed payment, oldest first. UTF-8 with a BOM (so Excel
+  shows ₹ and non-English text), CRLF line endings, RFC 4180 quoting, amounts
+  as plain rupee decimals built from integer paise, and text starting with
+  `= + - @` prefixed with `'` so spreadsheets don't run it as a formula.
 
 ## Notes
 

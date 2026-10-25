@@ -1,12 +1,8 @@
 import { useCallback } from 'react';
 
-import {
-  useCategoryRepository,
-  usePaymentMethodRepository,
-  usePaymentRepository,
-} from '@/database/hooks';
 import { DATABASE_VERSION } from '@/database/migrations';
-import { shareBackupFile } from '@/features/settings/services/share-backup-file';
+import { useLoadAllData } from '@/features/settings/hooks/use-load-all-data';
+import { shareFile } from '@/features/settings/services/share-file';
 import {
   backupFileName,
   buildBackup,
@@ -17,27 +13,22 @@ import {
 
 /** Returns a function that backs up all data to a JSON file and offers to share it. */
 export function useCreateBackup() {
-  const paymentRepository = usePaymentRepository();
-  const categoryRepository = useCategoryRepository();
-  const paymentMethodRepository = usePaymentMethodRepository();
+  const loadAllData = useLoadAllData();
 
   return useCallback(async (): Promise<BackupV2> => {
-    const [{ payments, items }, categories, paymentMethods] = await Promise.all([
-      paymentRepository.listAllWithItems(),
-      categoryRepository.listAll(),
-      paymentMethodRepository.listAll(),
-    ]);
+    const data = await loadAllData();
     const exportedAt = new Date();
-    const backup = buildBackup(
-      { categories, paymentMethods, payments, expenseItems: items },
-      { schemaVersion: DATABASE_VERSION, exportedAt },
-    );
+    const backup = buildBackup(data, { schemaVersion: DATABASE_VERSION, exportedAt });
     const contents = serializeBackup(backup);
 
     // Re-read what we're about to hand over, so a broken file is caught here, not at restore.
     parseBackup(contents);
 
-    await shareBackupFile(backupFileName(exportedAt), contents);
+    await shareFile(backupFileName(exportedAt), contents, {
+      mimeType: 'application/json',
+      UTI: 'public.json',
+      dialogTitle: 'Save backup',
+    });
     return backup;
-  }, [paymentRepository, categoryRepository, paymentMethodRepository]);
+  }, [loadAllData]);
 }

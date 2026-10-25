@@ -3,10 +3,11 @@ import {
   buildBackup,
   parseBackup,
   serializeBackup,
+  summarizeBackup,
   type BackupData,
 } from '@/features/settings/utils/backup';
-import { buildSeedCategories } from '@/test-utils/seed-categories';
 import { buildSeptember2026Expenses } from '@/test-utils/september-2026';
+import type { Category } from '@/types/category';
 import type { ExpenseItem } from '@/types/expense';
 import type { Payment } from '@/types/payment';
 import type { PaymentMethod } from '@/types/payment-method';
@@ -15,6 +16,20 @@ const paymentMethods: PaymentMethod[] = [
   { id: 'upi', name: 'UPI', sortOrder: 0, isActive: true },
   { id: 'old-card', name: 'Old card', sortOrder: 1, isActive: false },
 ];
+
+/** One category per id the September dataset uses ("food", "transport", …). */
+function buildCategories(categoryIds: string[]): Category[] {
+  return [...new Set(categoryIds)].map((id, sortOrder) => ({
+    id,
+    name: id,
+    parentId: null,
+    type: 'expense',
+    isEssentialDefault: false,
+    icon: null,
+    sortOrder,
+    isActive: true,
+  }));
+}
 
 /** The September dataset as v2 records: one payment per expense item. */
 function buildData(): BackupData {
@@ -34,7 +49,12 @@ function buildData(): BackupData {
     updatedAt: e.updatedAt,
   }));
   const expenseItems: ExpenseItem[] = expenses.map(({ paymentMethodId, ...item }) => item);
-  return { categories: buildSeedCategories(), paymentMethods, payments, expenseItems };
+  return {
+    categories: buildCategories(expenses.map((e) => e.categoryId)),
+    paymentMethods,
+    payments,
+    expenseItems,
+  };
 }
 
 const data = buildData();
@@ -106,6 +126,28 @@ describe('parseBackup (version 2)', () => {
     expect(() => parseBackup(json)).toThrow('refers to a missing payment');
   });
 
+  it('rejects links to categories or payment methods missing from the file', () => {
+    const missingCategory = tampered((raw) => {
+      raw.expenseItems[0].categoryId = 'gone';
+    });
+    expect(() => parseBackup(missingCategory)).toThrow('refers to a missing category');
+
+    const missingSubcategory = tampered((raw) => {
+      raw.expenseItems[0].subcategoryId = 'gone';
+    });
+    expect(() => parseBackup(missingSubcategory)).toThrow('refers to a missing subcategory');
+
+    const missingMethod = tampered((raw) => {
+      raw.payments[0].paymentMethodId = 'gone';
+    });
+    expect(() => parseBackup(missingMethod)).toThrow('refers to a missing payment method');
+
+    const missingParent = tampered((raw) => {
+      raw.categories[1].parentId = 'gone';
+    });
+    expect(() => parseBackup(missingParent)).toThrow('missing parent category');
+  });
+
   it('rejects a payment whose items exceed it', () => {
     const json = tampered((raw) => {
       raw.expenseItems[1].paymentId = raw.expenseItems[0].paymentId;
@@ -142,6 +184,73 @@ describe('parseBackup (version 1)', () => {
 
     v1.summary.totalAmount += 1;
     expect(() => parseBackup(JSON.stringify(v1))).toThrow('total does not match');
+  });
+});
+
+describe('summarizeBackup', () => {
+  it('counts only items of confirmed payments as spending', () => {
+    const withAwaiting = parseBackup(
+      tampered((raw) => {
+        raw.payments[0].status = 'initiated';
+        raw.payments[1].status = 'failed';
+      }),
+    );
+    const failedAmount = backup.payments[0].amount + backup.payments[1].amount;
+
+    expect(summarizeBackup(withAwaiting)).toEqual({
+      version: 2,
+      exportedAt: exportedAt.toISOString(),
+      paymentCount: 63,
+      expenseItemCount: 63,
+      spendingCount: 61,
+      spendingTotal: 1275950 - failedAmount,
+      categoryCount: data.categories.length,
+      paymentMethodCount: 2,
+      firstDate: '2026-09-01',
+      lastDate: expect.stringMatching(/^2026-09-/),
+    });
+  });
+
+  it('treats every v1 expense as one confirmed payment', () => {
+    const expenses = buildSeptember2026Expenses().map(({ paymentId, ...expense }) => expense);
+    const v1 = parseBackup(
+      JSON.stringify({
+        format: 'expense-tracker-backup',
+        version: 1,
+        schemaVersion: 1,
+        exportedAt: exportedAt.toISOString(),
+        currency: 'INR',
+        summary: {
+          expenseCount: 63,
+          totalAmount: 1275950,
+          categoryCount: data.categories.length,
+          paymentMethodCount: 2,
+        },
+        categories: data.categories,
+        paymentMethods,
+        expenses,
+      }),
+    );
+    expect(summarizeBackup(v1)).toMatchObject({
+      version: 1,
+      paymentCount: 63,
+      expenseItemCount: 63,
+      spendingCount: 63,
+      spendingTotal: 1275950,
+    });
+  });
+
+  it('has no date range for an empty backup', () => {
+    const empty = buildBackup(
+      { categories: [], paymentMethods: [], payments: [], expenseItems: [] },
+      { schemaVersion: 2, exportedAt },
+    );
+    expect(summarizeBackup(empty)).toMatchObject({
+      spendingCount: 0,
+      spendingTotal: 0,
+      firstDate: null,
+      lastDate: null,
+    });
   });
 });
 
