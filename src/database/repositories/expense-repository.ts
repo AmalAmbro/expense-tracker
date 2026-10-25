@@ -158,6 +158,14 @@ export function createExpenseRepository(db: SQLiteDatabase) {
       return rows.map(toExpense);
     },
 
+    /** Number of expense items, whatever their payment's status. */
+    async countAll(): Promise<number> {
+      const row = await db.getFirstAsync<{ count: number }>(
+        'SELECT COUNT(*) AS count FROM expense_items',
+      );
+      return row?.count ?? 0;
+    },
+
     /** @param month "YYYY-MM" */
     async getMonthlyTotal(month: string): Promise<number> {
       const { start, end } = getMonthDateRange(month);

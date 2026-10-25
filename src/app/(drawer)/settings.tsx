@@ -6,12 +6,14 @@ import { ThemedText } from '@/components/ui/themed-text';
 import { ThemedView } from '@/components/ui/themed-view';
 import { Spacing } from '@/constants/theme';
 import { RestorePreviewCard } from '@/features/settings/components/restore-preview-card';
+import { useBackupStatus } from '@/features/settings/hooks/use-backup-status';
 import { useCreateBackup } from '@/features/settings/hooks/use-create-backup';
 import { useExportCsv } from '@/features/settings/hooks/use-export-csv';
 import {
   useRestoreBackup,
   type RestorePreview,
 } from '@/features/settings/hooks/use-restore-backup';
+import { describeLastBackup } from '@/features/settings/utils/backup-reminder';
 import { formatPaise } from '@/utils/money';
 
 type ActionStatus =
@@ -51,24 +53,26 @@ function StatusMessage({ status }: { status: ActionStatus }) {
 
 export default function SettingsScreen() {
   const createBackup = useCreateBackup();
+  const backupStatus = useBackupStatus();
   const exportCsv = useExportCsv();
   const { pick, restore } = useRestoreBackup();
-  const [backupStatus, setBackupStatus] = useState<ActionStatus>(IDLE);
+  const [backupActionStatus, setBackupActionStatus] = useState<ActionStatus>(IDLE);
   const [csvStatus, setCsvStatus] = useState<ActionStatus>(IDLE);
   const [restoreStatus, setRestoreStatus] = useState<ActionStatus>(IDLE);
   const [preview, setPreview] = useState<RestorePreview | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
   async function handleBackup() {
-    setBackupStatus({ state: 'working' });
+    setBackupActionStatus({ state: 'working' });
     try {
       const { summary } = await createBackup();
-      setBackupStatus({
+      setBackupActionStatus({
         state: 'done',
         message: `Backup created: ${describeExpenses(summary.expenseItemCount, summary.expenseItemTotal)} in total.`,
       });
+      backupStatus.reload();
     } catch (err) {
-      setBackupStatus(errorStatus(err, 'Failed to create backup'));
+      setBackupActionStatus(errorStatus(err, 'Failed to create backup'));
     }
   }
 
@@ -127,12 +131,15 @@ export default function SettingsScreen() {
             Save all expenses, categories, and payment methods to a JSON file. You choose where it
             goes — Files, Google Drive, email — the app doesn’t upload it anywhere.
           </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {describeLastBackup(backupStatus.lastBackupAt)}
+          </ThemedText>
           <Button
             title="Back up data (JSON)"
             onPress={handleBackup}
-            loading={backupStatus.state === 'working'}
+            loading={backupActionStatus.state === 'working'}
           />
-          <StatusMessage status={backupStatus} />
+          <StatusMessage status={backupActionStatus} />
         </View>
 
         <View style={styles.section}>

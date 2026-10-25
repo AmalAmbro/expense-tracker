@@ -15,6 +15,7 @@ import { ExpenseListItem } from '@/features/expenses/components/expense-list-ite
 import { useExpenseList } from '@/features/expenses/hooks/use-expense-list';
 import { useExpenseOptions } from '@/features/expenses/hooks/use-expense-options';
 import { formatCategoryLabel } from '@/features/expenses/utils/category-label';
+import { useBackupStatus } from '@/features/settings/hooks/use-backup-status';
 import { currentMonth, getMonthDateRange, todayISODate } from '@/utils/date';
 import { formatPaise } from '@/utils/money';
 
@@ -28,6 +29,7 @@ export default function HomeScreen() {
   const { start, end } = getMonthDateRange(month);
   const { expenses, isLoading, error } = useExpenseList({ startDate: start, endDate: end });
   const { categories, paymentMethods } = useExpenseOptions();
+  const { reminder: backupReminder } = useBackupStatus();
 
   const summary = useMemo(() => buildDashboardSummary(expenses, today), [expenses, today]);
   const categoryNameById = useMemo(
@@ -58,6 +60,15 @@ export default function HomeScreen() {
             </ThemedText>
           ) : null}
         </View>
+
+        {backupReminder ? (
+          <ThemedView type="backgroundElement" style={styles.reminder}>
+            <ThemedText type="small" style={styles.reminderText}>
+              {backupReminder}
+            </ThemedText>
+            <TextButton title="Back up" onPress={() => router.navigate('/settings')} />
+          </ThemedView>
+        ) : null}
 
         {error ? (
           <ThemedText themeColor="danger" style={styles.errorText}>
@@ -136,6 +147,18 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  reminder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingLeft: Spacing.three,
+    paddingRight: Spacing.one,
+    paddingVertical: Spacing.two,
+    borderRadius: Radius.control,
+  },
+  reminderText: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

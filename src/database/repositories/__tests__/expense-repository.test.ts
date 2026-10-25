@@ -63,6 +63,14 @@ describe('expenseRepository on schema v2', () => {
     expect(payment).toMatchObject({ amount: 20000, date: '2026-10-01', status: 'confirmed' });
   });
 
+  it('counts every expense item', async () => {
+    const { db, ids } = await setUp();
+    const repo = createExpenseRepository(db);
+    expect(await repo.countAll()).toBe(0);
+    await repo.createMany([newExpense(ids), newExpense(ids, { amount: 9000 })]);
+    expect(await repo.countAll()).toBe(2);
+  });
+
   it('saves a batch atomically: an invalid row saves nothing', async () => {
     const { db, ids } = await setUp();
     const repo = createExpenseRepository(db);

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { DATABASE_VERSION } from '@/database/migrations';
 import { useLoadAllData } from '@/features/settings/hooks/use-load-all-data';
+import { recordBackup } from '@/features/settings/services/backup-status';
 import { shareFile } from '@/features/settings/services/share-file';
 import {
   backupFileName,
@@ -29,6 +30,9 @@ export function useCreateBackup() {
       UTI: 'public.json',
       dialogTitle: 'Save backup',
     });
+    // Android doesn't report whether the file was actually saved from the share sheet,
+    // so this records that a backup was made and handed over.
+    await recordBackup(exportedAt);
     return backup;
   }, [loadAllData]);
 }
