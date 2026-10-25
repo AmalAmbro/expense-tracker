@@ -71,6 +71,37 @@ describe('createCategoryMatcher', () => {
     }
   });
 
+  it('knows the words from the October 2026 notes', () => {
+    const expected: Record<string, string> = {
+      Pulses: 'food-groceries/pulses',
+      'Green peas': 'food-groceries/pulses',
+      Cherupayar: 'food-groceries/pulses',
+      Nuts: 'food-groceries/nuts',
+      'Ground nut': 'food-groceries/nuts',
+      Peanut: 'food-groceries/nuts',
+      Dairy: 'food-groceries/dairy',
+      Diary: 'food-groceries/dairy',
+      Yogurt: 'food-groceries/dairy',
+      'Ice cream': 'food-groceries/dairy',
+      Chocolate: 'food-groceries/tea-snacks',
+      'Home wifi': 'bills-utilities/internet',
+      Broadband: 'bills-utilities/internet',
+      'Mobile recharge': 'bills-utilities/mobile-recharge',
+      'Electricity bill': 'bills-utilities/electricity',
+    };
+    for (const [description, subcategoryId] of Object.entries(expected)) {
+      expect({ description, subcategoryId: match(description)?.subcategoryId }).toEqual({
+        description,
+        subcategoryId,
+      });
+    }
+  });
+
+  it('still asks when a description names two different bills', () => {
+    // "Recharge/Subscription" for home wifi: recharge → Mobile Recharge, wifi → Internet.
+    expect(match('Recharge/Subscription home wifi')).toBeNull();
+  });
+
   it('categorises every line of the September 2026 dataset', () => {
     const topLevelIds: Record<string, string> = {
       food: 'food-groceries',

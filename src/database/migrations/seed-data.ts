@@ -88,6 +88,11 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     isEssentialDefault: true,
     children: ['Bank Charges', 'Insurance', 'Other'],
   },
+  {
+    name: 'Bills & Utilities',
+    isEssentialDefault: true,
+    children: ['Internet', 'Mobile Recharge', 'Electricity'],
+  },
 ];
 
 export const SEED_PAYMENT_METHODS = [

@@ -66,6 +66,13 @@ describe('migrateDbIfNeeded', () => {
       'SELECT COUNT(*) AS n FROM categories',
     );
     expect(categories!.n).toBeGreaterThan(0);
+
+    const bills = await db.getAllAsync<{ name: string }>(
+      `SELECT child.name FROM categories child
+       JOIN categories parent ON parent.id = child.parent_id
+       WHERE parent.name = 'Bills & Utilities' ORDER BY child.sort_order`,
+    );
+    expect(bills.map((c) => c.name)).toEqual(['Internet', 'Mobile Recharge', 'Electricity']);
   });
 
   it('is a no-op when already up to date', async () => {

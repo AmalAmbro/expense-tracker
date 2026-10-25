@@ -7,6 +7,7 @@ export type CategoryAlias = { alias: string; category: string; subcategory?: str
 
 const FOOD = 'Food & Groceries';
 const TRANSPORT = 'Transportation';
+const BILLS = 'Bills & Utilities';
 
 export const CATEGORY_ALIASES: CategoryAlias[] = [
   { alias: 'chicken', category: FOOD, subcategory: 'Chicken' },
@@ -18,6 +19,11 @@ export const CATEGORY_ALIASES: CategoryAlias[] = [
   { alias: 'eggs', category: FOOD, subcategory: 'Eggs' },
   { alias: 'milk', category: FOOD, subcategory: 'Dairy' },
   { alias: 'curd', category: FOOD, subcategory: 'Dairy' },
+  { alias: 'dairy', category: FOOD, subcategory: 'Dairy' },
+  // A common slip when typing "dairy" in notes.
+  { alias: 'diary', category: FOOD, subcategory: 'Dairy' },
+  { alias: 'yogurt', category: FOOD, subcategory: 'Dairy' },
+  { alias: 'ice cream', category: FOOD, subcategory: 'Dairy' },
   { alias: 'veg', category: FOOD, subcategory: 'Vegetables' },
   { alias: 'veggies', category: FOOD, subcategory: 'Vegetables' },
   { alias: 'vegetable', category: FOOD, subcategory: 'Vegetables' },
@@ -30,7 +36,15 @@ export const CATEGORY_ALIASES: CategoryAlias[] = [
   { alias: 'oil', category: FOOD, subcategory: 'Cooking Oil' },
   { alias: 'cooking oil', category: FOOD, subcategory: 'Cooking Oil' },
   { alias: 'nuts', category: FOOD, subcategory: 'Nuts' },
+  { alias: 'ground nut', category: FOOD, subcategory: 'Nuts' },
+  { alias: 'groundnut', category: FOOD, subcategory: 'Nuts' },
+  { alias: 'peanut', category: FOOD, subcategory: 'Nuts' },
   { alias: 'dal', category: FOOD, subcategory: 'Pulses' },
+  { alias: 'pulses', category: FOOD, subcategory: 'Pulses' },
+  { alias: 'peas', category: FOOD, subcategory: 'Pulses' },
+  { alias: 'green peas', category: FOOD, subcategory: 'Pulses' },
+  // Green gram, in Malayalam.
+  { alias: 'cherupayar', category: FOOD, subcategory: 'Pulses' },
   { alias: 'breakfast', category: FOOD, subcategory: 'Breakfast' },
   { alias: 'lunch', category: FOOD, subcategory: 'Lunch' },
   { alias: 'dinner', category: FOOD, subcategory: 'Dinner' },
@@ -38,6 +52,7 @@ export const CATEGORY_ALIASES: CategoryAlias[] = [
   { alias: 'coffee', category: FOOD, subcategory: 'Tea & Snacks' },
   { alias: 'snack', category: FOOD, subcategory: 'Tea & Snacks' },
   { alias: 'snacks', category: FOOD, subcategory: 'Tea & Snacks' },
+  { alias: 'chocolate', category: FOOD, subcategory: 'Tea & Snacks' },
 
   { alias: 'petrol', category: TRANSPORT, subcategory: 'Petrol' },
   { alias: 'diesel', category: TRANSPORT, subcategory: 'Petrol' },
@@ -80,4 +95,11 @@ export const CATEGORY_ALIASES: CategoryAlias[] = [
   { alias: 'course', category: 'Education', subcategory: 'Courses' },
 
   { alias: 'insurance', category: 'Financial', subcategory: 'Insurance' },
+
+  { alias: 'wifi', category: BILLS, subcategory: 'Internet' },
+  { alias: 'internet', category: BILLS, subcategory: 'Internet' },
+  { alias: 'broadband', category: BILLS, subcategory: 'Internet' },
+  { alias: 'recharge', category: BILLS, subcategory: 'Mobile Recharge' },
+  { alias: 'mobile recharge', category: BILLS, subcategory: 'Mobile Recharge' },
+  { alias: 'electricity', category: BILLS, subcategory: 'Electricity' },
 ];
